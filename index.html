@@ -1028,7 +1028,7 @@
 
   window.saveAnthropicKey = function() {
     const key = document.getElementById('anthropic-key-input').value.trim();
-    if (!key.startsWith('sk-ant-')) { alert('Clé invalide (doit commencer par sk-ant-)'); return; }
+    if (!key.startsWith('AIza') && !key.startsWith('sk-')) { alert('Clé invalide (doit commencer par AIza...)'); return; }
     localStorage.setItem('anthropic_key', key);
     showToast('Clé Anthropic sauvegardée ✓');
     updateConfigStatus();
