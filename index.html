@@ -212,6 +212,10 @@
     .empty-title { font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px; }
     .empty-sub { font-size:14px;line-height:1.5; }
     .refresh-btn { background:none;border:1.5px solid var(--border);border-radius:999px;color:var(--muted);padding:6px 14px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer; }
+
+    .emoji-opt { font-size:22px;cursor:pointer;padding:4px;border-radius:8px;transition:transform 0.15s,background 0.15s;line-height:1; }
+    .emoji-opt:hover { background:rgba(255,255,255,0.1);transform:scale(1.2); }
+    .emoji-opt.selected { background:rgba(79,255,176,0.2);transform:scale(1.15);outline:2px solid var(--green);border-radius:8px; }
   </style>
 </head>
 <body>
@@ -272,12 +276,9 @@
   <div class="section" id="tab-upload">
     <div class="upload-screen">
       <div class="screen-title">Nouvelle capture 📸</div>
-      <div class="screen-sub">Prends-toi en photo avec un animal — l'IA identifie l'espèce automatiquement !</div>
-      <div id="cfg-warn" class="config-warn" style="display:none">⚠️ Firebase ou Gemini non configuré. Va dans <strong>Config</strong>.</div>
-      <div class="input-group">
-        <div class="input-label">Ton prénom / pseudo</div>
-        <input class="nice-input" id="author-input" type="text" placeholder="Ex : Lucas, Sacha..." autocomplete="off" />
-      </div>
+      <div class="screen-sub">Immortalise ta rencontre avec un animal !</div>
+      <div id="cfg-warn" class="config-warn" style="display:none">⚠️ Firebase non configuré.</div>
+
       <div class="camera-zone" id="camera-zone">
         <input type="file" accept="image/*" id="file-input" onchange="handleFile(this.files[0])" />
         <div class="camera-placeholder" id="cam-placeholder">
@@ -287,18 +288,37 @@
         </div>
         <img class="preview-photo" id="preview-photo" />
       </div>
-      <div class="detected-card" id="detected-card">
-        <div class="detected-top">
-          <div class="detected-emoji-big" id="det-emoji">🐾</div>
-          <div class="detected-info">
-            <div class="detected-tag">Animal détecté ✦</div>
-            <div class="detected-name" id="det-name">—</div>
-            <div class="detected-scientific" id="det-sci"></div>
-          </div>
-        </div>
-        <div class="detected-desc-text" id="det-desc"></div>
-        <div id="det-badge"></div>
+
+      <div class="input-group">
+        <div class="input-label">Ton prénom / pseudo *</div>
+        <input class="nice-input" id="author-input" type="text" placeholder="Ex : Lucas, Sacha..." autocomplete="off" oninput="checkFormReady()" />
       </div>
+
+      <div class="input-group">
+        <div class="input-label">Animal rencontré *</div>
+        <input class="nice-input" id="animal-input" type="text" placeholder="Ex : Lion, Mésange bleue, Méduse..." oninput="checkFormReady()" />
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">Emoji de l'animal</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span id="selected-emoji" style="font-size:36px">🐾</span>
+          <span style="font-size:13px;color:var(--muted)">Choisis ci-dessous</span>
+        </div>
+        <input type="hidden" id="emoji-hidden" value="" />
+        <div id="emoji-picker" style="display:flex;flex-wrap:wrap;gap:6px;max-height:140px;overflow-y:auto;background:var(--card);border-radius:14px;padding:12px;border:1.5px solid var(--border)"></div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">Lieu 📍</div>
+        <input class="nice-input" id="lieu-input" type="text" placeholder="Ex : Safari Kenya, Zoo de Paris, Forêt de Fontainebleau..." />
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">Anecdote / Note ✍️</div>
+        <textarea class="nice-input" id="note-input" placeholder="Raconte ta rencontre, une info fun sur l'animal..." rows="3" style="resize:vertical"></textarea>
+      </div>
+
       <div class="status-pill" id="status-pill">
         <div class="spin" id="status-spin" style="display:none"></div>
         <span id="status-msg"></span>
@@ -392,7 +412,6 @@
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-  // === CONFIG ===
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyCaqZGo3rnOTmlaDpKRPR702fn5wVGIqNk",
     authDomain: "animodex-bfea4.firebaseapp.com",
@@ -401,19 +420,31 @@
     messagingSenderId: "360553905455",
     appId: "1:360553905455:web:bb461414e6ad6150c0b5da"
   };
-  const GEMINI_PROXY = "https://cool-grass-8dfc.tutomod.workers.dev";
-  // ==============
 
-  let db = null, allEntries = [], selectedFile = null, detectedData = null;
+  let db = null, allEntries = [], selectedFile = null;
   const TOTAL = 8700000;
+
+  const ANIMAL_EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷️","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐈","🐓","🦃","🦤","🦚","🦜","🦢","🦩","🕊️","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🐁","🐀","🐿️","🦔"];
 
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cfg-warn').style.display = 'none';
-    document.getElementById('gemini-key-input').value = GEMINI_KEY;
-    document.getElementById('fb-config-input').value = JSON.stringify(FIREBASE_CONFIG);
+    renderEmojiPicker();
     tryInitFirebase();
-    updateCfgStatus();
   });
+
+  function renderEmojiPicker() {
+    const picker = document.getElementById('emoji-picker');
+    picker.innerHTML = ANIMAL_EMOJIS.map(e =>
+      `<span class="emoji-opt" onclick="selectEmoji('${e}')">${e}</span>`
+    ).join('');
+  }
+
+  window.selectEmoji = function(e) {
+    document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
+    event.target.classList.add('selected');
+    document.getElementById('selected-emoji').textContent = e;
+    document.getElementById('emoji-hidden').value = e;
+  };
 
   function tryInitFirebase() {
     try {
@@ -429,14 +460,12 @@
   function updateCfgStatus() {
     document.getElementById('cfg-status-lines').innerHTML =
       '<div class="status-line">✅ Firebase intégré</div>' +
-      '<div class="status-line">✅ Clé Gemini intégrée</div>' +
       '<div class="status-line" style="color:var(--green);font-weight:700">🟢 Tout est prêt !</div>';
   }
 
-  window.handleFile = async function(file) {
+  window.handleFile = function(file) {
     if (!file) return;
-    selectedFile = file; detectedData = null;
-    document.getElementById('submit-btn').disabled = true;
+    selectedFile = file;
     const reader = new FileReader();
     reader.onload = e => {
       const img = document.getElementById('preview-photo');
@@ -445,47 +474,15 @@
       document.getElementById('camera-zone').classList.add('has-image');
     };
     reader.readAsDataURL(file);
-    await detectAnimal(file);
+    checkFormReady();
   };
 
-  async function detectAnimal(file) {
-    showStatus('loading', 'Gemini analyse ta photo...');
-    const base64 = await toBase64(file);
-    const mime = file.type || 'image/jpeg';
-    const prompt = `Analyse cette photo. Y a-t-il un animal visible ?
-Réponds UNIQUEMENT en JSON valide sans texte autour :
-{"found":true,"commonName":"Nom en français","scientificName":"Nom latin","emoji":"🐾","description":"Phrase fun max 80 chars","confidence":"high"}
-Si aucun animal : {"found":false}`;
-    try {
-      const res = await fetch(GEMINI_PROXY, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:prompt}]}], generationConfig:{temperature:0.1,maxOutputTokens:300} })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const match = text.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error('Réponse invalide');
-      const parsed = JSON.parse(match[0]);
-      if (!parsed.found) { showStatus('error', '🔍 Aucun animal détecté. Essaie une autre photo !'); return; }
-      detectedData = parsed;
-      renderDetected(parsed);
-      showStatus('success', 'Animal identifié ! 🎉');
-      document.getElementById('submit-btn').disabled = false;
-    } catch(e) { showStatus('error', 'Erreur : ' + e.message); }
-  }
-
-  function renderDetected(d) {
-    document.getElementById('detected-card').classList.add('visible');
-    document.getElementById('det-emoji').textContent = d.emoji || '🐾';
-    document.getElementById('det-name').textContent = d.commonName;
-    document.getElementById('det-sci').textContent = d.scientificName || '';
-    document.getElementById('det-desc').textContent = d.description || '';
-    const already = allEntries.some(e => e.animalName?.toLowerCase() === d.commonName?.toLowerCase());
-    document.getElementById('det-badge').innerHTML = already
-      ? '<span class="badge-already">Déjà capturé par le groupe</span>'
-      : '<span class="badge-new">🌟 Nouvelle espèce !</span>';
-  }
+  window.checkFormReady = function() {
+    const author = document.getElementById('author-input').value.trim();
+    const animal = document.getElementById('animal-input').value.trim();
+    const ok = author && animal && selectedFile;
+    document.getElementById('submit-btn').disabled = !ok;
+  };
 
   async function uploadPhoto(file) {
     const fd = new FormData(); fd.append('image', file);
@@ -496,27 +493,45 @@ Si aucun animal : {"found":false}`;
   }
 
   window.submitEntry = async function() {
-    if (!db) { showStatus('error', 'Firebase non connecté'); return; }
-    if (!selectedFile || !detectedData) return;
+    if (!db || !selectedFile) return;
     const author = document.getElementById('author-input').value.trim() || 'Anonyme';
+    const animal = document.getElementById('animal-input').value.trim();
+    const lieu = document.getElementById('lieu-input').value.trim();
+    const emoji = document.getElementById('emoji-hidden').value || '🐾';
+    const note = document.getElementById('note-input').value.trim();
+
     document.getElementById('submit-btn').disabled = true;
     try {
       showStatus('loading', 'Upload de la photo...');
       let photoUrl = '';
       try { photoUrl = await uploadPhoto(selectedFile); }
       catch { photoUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(selectedFile); }); }
+
       showStatus('loading', 'Enregistrement...');
-      await addDoc(collection(db, 'entries'), { author, animalName:detectedData.commonName, animalScientific:detectedData.scientificName||'', animalEmoji:detectedData.emoji||'🐾', animalDesc:detectedData.description||'', photoUrl, createdAt:Date.now() });
-      showToast(`🎉 ${detectedData.emoji} ${detectedData.commonName} capturé !`);
+      await addDoc(collection(db, 'entries'), {
+        author, animalName: animal, animalEmoji: emoji,
+        lieu: lieu || '', note: note || '',
+        animalScientific: '', animalDesc: note || '',
+        photoUrl, createdAt: Date.now()
+      });
+
+      showToast(`🎉 ${emoji} ${animal} capturé !`);
       showStatus('success', 'Découverte enregistrée !');
-      selectedFile = null; detectedData = null;
+
+      selectedFile = null;
       document.getElementById('preview-photo').style.display = 'none';
       document.getElementById('preview-photo').src = '';
       document.getElementById('cam-placeholder').style.display = 'block';
       document.getElementById('camera-zone').classList.remove('has-image');
-      document.getElementById('detected-card').classList.remove('visible');
       document.getElementById('file-input').value = '';
+      document.getElementById('animal-input').value = '';
+      document.getElementById('lieu-input').value = '';
+      document.getElementById('note-input').value = '';
+      document.getElementById('emoji-hidden').value = '';
+      document.getElementById('selected-emoji').textContent = '🐾';
+      document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
       document.getElementById('submit-btn').disabled = true;
+
       loadEntries();
       setTimeout(() => switchTab('home', document.getElementById('nav-home')), 1200);
     } catch(e) { showStatus('error', 'Erreur : ' + e.message); document.getElementById('submit-btn').disabled = false; }
@@ -545,7 +560,7 @@ Si aucun animal : {"found":false}`;
     document.getElementById('recent-scroll').innerHTML = recent.map((e, i) => `
       <div class="recent-card" onclick="openModal(${i})" style="animation-delay:${i*0.05}s">
         <div class="recent-img">${e.photoUrl ? `<img src="${e.photoUrl}" alt="${e.animalName}" loading="lazy" />` : e.animalEmoji||'🐾'}</div>
-        <div class="recent-info"><div class="recent-animal">${e.animalEmoji||''} ${e.animalName}</div><div class="recent-author">${e.author}</div></div>
+        <div class="recent-info"><div class="recent-animal">${e.animalEmoji||''} ${e.animalName}</div><div class="recent-author">${e.author}${e.lieu ? ' · '+e.lieu : ''}</div></div>
       </div>`).join('');
   }
 
@@ -567,7 +582,10 @@ Si aucun animal : {"found":false}`;
     document.getElementById('gallery-grid').innerHTML = entries.map((e, i) => `
       <div class="g-card" style="animation-delay:${i*0.04}s" onclick="openModal(${allEntries.indexOf(e)})">
         ${e.photoUrl ? `<img class="g-img" src="${e.photoUrl}" alt="${e.animalName}" loading="lazy" />` : `<div class="g-img-placeholder">${e.animalEmoji||'🐾'}</div>`}
-        <div class="g-body"><div class="g-name">${e.animalEmoji||''} ${e.animalName}</div><div class="g-author">par ${e.author}</div></div>
+        <div class="g-body">
+          <div class="g-name">${e.animalEmoji||''} ${e.animalName}</div>
+          <div class="g-author">par ${e.author}${e.lieu ? ' · '+e.lieu : ''}</div>
+        </div>
       </div>`).join('');
   }
 
@@ -576,9 +594,12 @@ Si aucun animal : {"found":false}`;
     const photo = document.getElementById('modal-photo');
     photo.src = e.photoUrl||''; photo.style.display = e.photoUrl ? 'block' : 'none';
     document.getElementById('modal-name').textContent = `${e.animalEmoji||'🐾'} ${e.animalName}`;
-    document.getElementById('modal-sci').textContent = e.animalScientific||'';
-    document.getElementById('modal-desc').textContent = e.animalDesc||'';
-    document.getElementById('modal-tags').innerHTML = `<span class="modal-tag">👤 ${e.author}</span><span class="modal-tag">📅 ${new Date(e.createdAt).toLocaleDateString('fr')}</span>`;
+    document.getElementById('modal-sci').textContent = e.lieu ? '📍 ' + e.lieu : '';
+    document.getElementById('modal-desc').textContent = e.note || e.animalDesc || '';
+    document.getElementById('modal-tags').innerHTML =
+      `<span class="modal-tag">👤 ${e.author}</span>` +
+      `<span class="modal-tag">📅 ${new Date(e.createdAt).toLocaleDateString('fr')}</span>` +
+      (e.lieu ? `<span class="modal-tag">📍 ${e.lieu}</span>` : '');
     document.getElementById('modal').classList.add('open');
   };
 
@@ -591,7 +612,7 @@ Si aucun animal : {"found":false}`;
       scores[e.author].add(e.animalName?.toLowerCase());
       lastAnimals[e.author].push(e.animalEmoji||'');
     });
-    const sorted = Object.entries(scores).map(([name, set]) => ({name, count:set.size, emojis:[...new Set(lastAnimals[name])].slice(0,4)})).sort((a,b) => b.count-a.count);
+    const sorted = Object.entries(scores).map(([name, set]) => ({name, count:set.size, emojis:[...new Set(lastAnimals[name])].slice(0,5)})).sort((a,b) => b.count-a.count);
     if (!sorted.length) {
       document.getElementById('podium-wrap').innerHTML = '';
       document.getElementById('lb-list').innerHTML = `<div class="empty"><div class="empty-big">🏅</div><div class="empty-title">Classement vide</div><div class="empty-sub">Capturez des animaux !</div></div>`;
@@ -619,10 +640,6 @@ Si aucun animal : {"found":false}`;
     if (tab === 'config') updateCfgStatus();
     window.scrollTo(0,0);
   };
-
-  function toBase64(file) {
-    return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
-  }
 
   function showStatus(type, msg) {
     const pill = document.getElementById('status-pill');
