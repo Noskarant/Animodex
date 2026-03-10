@@ -941,12 +941,12 @@
       <div class="setup-card">
         <div class="setup-step">
           <div class="step-num">5</div>
-          <div class="step-title">Clé API Anthropic (Claude Vision)</div>
+          <div class="step-title">Clé API Gemini (Gratuit 🎉)</div>
         </div>
-        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px">Va sur <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2)">console.anthropic.com</a> → API Keys → crée une clé.</p>
-        <input class="name-input" id="anthropic-key-input" type="password" placeholder="sk-ant-..." style="margin-bottom:8px" />
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px">Va sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent2)">aistudio.google.com</a> → "Get API key" → "Create API key" → copie-la ici.</p>
+        <input class="name-input" id="anthropic-key-input" type="password" placeholder="AIza..." style="margin-bottom:8px" />
         <button class="btn btn-primary" onclick="saveAnthropicKey()">Sauvegarder la clé</button>
-        <p style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ Stockée localement dans ton navigateur seulement.</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px">✅ 100% gratuit — stockée localement dans ton navigateur.</p>
       </div>
 
       <div class="setup-card">
@@ -1039,7 +1039,7 @@
     const hasAnthropic = !!localStorage.getItem('anthropic_key');
     document.getElementById('config-status').innerHTML = `
       ${hasFirebase ? '✅' : '❌'} Firebase configuré<br>
-      ${hasAnthropic ? '✅' : '❌'} Clé Anthropic configurée<br>
+      ${hasAnthropic ? '✅' : '❌'} Clé Gemini configurée<br>
       ${(hasFirebase && hasAnthropic) ? '🟢 <strong style="color:var(--accent)">Tout est prêt !</strong>' : '🔴 Configuration incomplète'}
     `;
   }
@@ -1075,53 +1075,52 @@
     if (file) { document.getElementById('file-input').files = e.dataTransfer.files; handleFile(file); }
   });
 
-  // ─── CLAUDE VISION ─────────────────────────────────────────────────────────
+  // ─── GEMINI VISION ─────────────────────────────────────────────────────────
   async function detectAnimal(file) {
     const apiKey = localStorage.getItem('anthropic_key');
     if (!apiKey) {
-      showStatus('error', 'Clé API Anthropic manquante. Va dans ⚙ Config.');
+      showStatus('error', 'Clé API Gemini manquante. Va dans ⚙ Config.');
       return;
     }
 
-    showStatus('loading', 'Analyse de la photo par Claude Vision...');
+    showStatus('loading', 'Analyse de la photo par Gemini Vision...');
 
     const base64 = await fileToBase64(file);
     const mediaType = file.type || 'image/jpeg';
 
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-opus-4-5',
-          max_tokens: 400,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-              { type: 'text', text: `Analyse cette photo. Y a-t-il un animal (sauvage ou domestique) visible ?
+    const prompt = `Analyse cette photo. Y a-t-il un animal (sauvage ou domestique) visible ?
 Réponds UNIQUEMENT en JSON valide, sans aucun texte avant ou après :
 {
-  "found": true/false,
+  "found": true,
   "commonName": "Nom commun en français (ex: Lion, Mésange bleue...)",
   "scientificName": "Nom scientifique",
   "emoji": "emoji représentant l'animal",
   "description": "Une phrase courte et fun sur cet animal (max 80 chars)",
   "confidence": "high/medium/low"
 }
-Si aucun animal n'est trouvé, retourne { "found": false }.` }
-            ]
-          }]
-        })
-      });
+Si aucun animal n'est trouvé, retourne uniquement: {"found": false}`;
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inline_data: { mime_type: mediaType, data: base64 } },
+                { text: prompt }
+              ]
+            }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 400 }
+          })
+        }
+      );
 
       const data = await res.json();
-      const text = data.content?.[0]?.text || '';
+      if (data.error) throw new Error(data.error.message);
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('Pas de JSON dans la réponse');
       const parsed = JSON.parse(match[0]);
