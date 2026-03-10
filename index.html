@@ -454,8 +454,8 @@
   };
 
   async function detectAnimal(file) {
-    const apiKey = localStorage.getItem('gemini_key');
-    if (!apiKey) { showStatus('error', 'Clé Gemini manquante → onglet Config'); return; }
+    const apiKey = GEMINI_KEY;
+    if (!apiKey || apiKey === 'AIzaSyBIXXx5a8Q_17S3GWFhH8joaY-mI5Ri6jE') { showStatus('error', 'Cle Gemini non configuree dans le code'); return; }
     showStatus('loading', 'Gemini analyse ta photo...');
     const base64 = await toBase64(file);
     const mime = file.type || 'image/jpeg';
