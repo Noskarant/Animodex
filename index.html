@@ -392,50 +392,45 @@
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+  // === CONFIG ===
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCaqZGo3rnOTmlaDpKRPR702fn5wVGIqNk",
+    authDomain: "animodex-bfea4.firebaseapp.com",
+    projectId: "animodex-bfea4",
+    storageBucket: "animodex-bfea4.firebasestorage.app",
+    messagingSenderId: "360553905455",
+    appId: "1:360553905455:web:bb461414e6ad6150c0b5da"
+  };
+  const GEMINI_KEY = "AIzaSyBIXXx5a8Q_17S3GWFhH8joaY-mI5Ri6jE";
+  // ==============
+
   let db = null, allEntries = [], selectedFile = null, detectedData = null;
   const TOTAL = 8700000;
 
-  window.addEventListener('DOMContentLoaded', () => { loadStoredKeys(); tryInitFirebase(); updateCfgStatus(); });
-
-  function loadStoredKeys() {
-    const k = localStorage.getItem('gemini_key');
-    if (k) document.getElementById('gemini-key-input').value = k;
-    const c = localStorage.getItem('firebase_config');
-    if (c) document.getElementById('fb-config-input').value = c;
-  }
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('cfg-warn').style.display = 'none';
+    document.getElementById('gemini-key-input').value = GEMINI_KEY;
+    document.getElementById('fb-config-input').value = JSON.stringify(FIREBASE_CONFIG);
+    tryInitFirebase();
+    updateCfgStatus();
+  });
 
   function tryInitFirebase() {
-    const cfg = localStorage.getItem('firebase_config');
-    if (!cfg) { document.getElementById('cfg-warn').style.display='block'; return; }
     try {
-      const config = JSON.parse(cfg);
-      const app = getApps().length ? getApps()[0] : initializeApp(config);
+      const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
       db = getFirestore(app);
-      document.getElementById('cfg-warn').style.display='none';
       loadEntries();
     } catch(e) { console.error('Firebase init:', e); }
   }
 
-  window.saveFbConfig = function() {
-    const v = document.getElementById('fb-config-input').value.trim();
-    try { JSON.parse(v); localStorage.setItem('firebase_config', v); showToast('Firebase sauvegardé ✓'); updateCfgStatus(); tryInitFirebase(); }
-    catch(e) { alert('JSON invalide : ' + e.message); }
-  };
-
-  window.saveGeminiKey = function() {
-    const k = document.getElementById('gemini-key-input').value.trim();
-    if (!k.startsWith('AIza')) { alert('Clé invalide (doit commencer par AIza...)'); return; }
-    localStorage.setItem('gemini_key', k); showToast('Clé Gemini sauvegardée ✓'); updateCfgStatus();
-  };
+  window.saveFbConfig = function() { showToast('Config déjà intégrée ✓'); };
+  window.saveGeminiKey = function() { showToast('Clé déjà intégrée ✓'); };
 
   function updateCfgStatus() {
-    const hasFb = !!localStorage.getItem('firebase_config');
-    const hasGem = !!localStorage.getItem('gemini_key');
-    document.getElementById('cfg-status-lines').innerHTML = `
-      <div class="status-line">${hasFb?'✅':'❌'} Firebase configuré</div>
-      <div class="status-line">${hasGem?'✅':'❌'} Clé Gemini configurée</div>
-      <div class="status-line" style="color:${hasFb&&hasGem?'var(--green)':'#ff6b6b'};font-weight:700">${hasFb&&hasGem?'🟢 Tout est prêt !':'🔴 Configuration incomplète'}</div>`;
-    document.getElementById('cfg-warn').style.display = (!hasFb || !hasGem) ? 'block' : 'none';
+    document.getElementById('cfg-status-lines').innerHTML =
+      '<div class="status-line">✅ Firebase intégré</div>' +
+      '<div class="status-line">✅ Clé Gemini intégrée</div>' +
+      '<div class="status-line" style="color:var(--green);font-weight:700">🟢 Tout est prêt !</div>';
   }
 
   window.handleFile = async function(file) {
@@ -454,8 +449,6 @@
   };
 
   async function detectAnimal(file) {
-    const apiKey = GEMINI_KEY;
-    if (!apiKey || apiKey === 'AIzaSyBIXXx5a8Q_17S3GWFhH8joaY-mI5Ri6jE') { showStatus('error', 'Cle Gemini non configuree dans le code'); return; }
     showStatus('loading', 'Gemini analyse ta photo...');
     const base64 = await toBase64(file);
     const mime = file.type || 'image/jpeg';
@@ -464,7 +457,7 @@ Réponds UNIQUEMENT en JSON valide sans texte autour :
 {"found":true,"commonName":"Nom en français","scientificName":"Nom latin","emoji":"🐾","description":"Phrase fun max 80 chars","confidence":"high"}
 Si aucun animal : {"found":false}`;
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:prompt}]}], generationConfig:{temperature:0.1,maxOutputTokens:300} })
       });
