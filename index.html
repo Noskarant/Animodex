@@ -1,673 +1,1036 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>🐾 Animodex</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #080b12;
-      --surface: #0f1420;
-      --card: #151c2e;
-      --border: rgba(255,255,255,0.08);
-      --green: #4fffb0;
-      --blue: #4fb3ff;
-      --purple: #b06bff;
-      --pink: #ff6bb5;
-      --yellow: #ffe44f;
-      --text: #f4f6ff;
-      --muted: rgba(244,246,255,0.45);
-      --nav-h: 72px;
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    * { margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent; }
-    html,body { height:100%;overscroll-behavior:none; }
-    body { background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + var(--safe-bottom)); }
-    ::-webkit-scrollbar { width:0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Deux Mondes — Oullins & L'Éperon</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    /* TOP BAR */
-    .topbar { position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));background:rgba(8,11,18,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border); }
-    .topbar-logo { font-size:22px;font-weight:900;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
-    .topbar-badge { display:flex;align-items:center;gap:6px;background:rgba(79,255,176,0.12);border:1px solid rgba(79,255,176,0.25);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--green); }
-    .live-dot { width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite; }
-    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
+:root {
+  --fr: #1a4fc4; --re: #ff5500; --ocean: #0096c7;
+  --sand: #ffd166; --leaf: #06d6a0; --hibiscus: #ef476f;
+  --bg: #f7f3ee; --card-fr: #eef2ff; --card-re: #fff2eb;
+  --text: #1a1a2e; --muted: #7a7a9a; --white: #ffffff;
+  --radius: 18px; --shadow: 0 4px 24px rgba(0,0,0,.09);
+}
 
-    /* CONTENT */
-    .page-content { padding-top:calc(64px + env(safe-area-inset-top,0px)); }
-    .section { display:none; }
-    .section.active { display:block; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+  /* bottom nav safe area */
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
-    /* HOME */
-    .home-hero { padding:28px 20px 20px;text-align:center; }
-    .hero-orb { width:140px;height:140px;margin:0 auto 20px;position:relative; }
-    .hero-orb-ring { position:absolute;inset:0;border-radius:50%;border:2px solid transparent;background:linear-gradient(135deg,var(--green),var(--blue),var(--purple)) border-box;-webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);-webkit-mask-composite:destination-out;mask-composite:exclude;animation:spin 6s linear infinite; }
-    @keyframes spin { to{transform:rotate(360deg)} }
-    .hero-orb-inner { position:absolute;inset:8px;border-radius:50%;background:linear-gradient(135deg,rgba(79,255,176,0.15),rgba(79,179,255,0.15));display:flex;align-items:center;justify-content:center;font-size:52px;filter:drop-shadow(0 0 20px rgba(79,255,176,0.4)); }
-    .hero-number { font-size:64px;font-weight:900;line-height:1;letter-spacing:-3px;background:linear-gradient(135deg,var(--green) 0%,var(--blue) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
-    .hero-label { font-size:14px;font-weight:600;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:2px; }
-    .hero-sublabel { font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5; }
-    .hero-sublabel strong { color:var(--text);font-weight:700; }
-    .progress-pill { margin:20px auto;max-width:320px;background:rgba(255,255,255,0.05);border-radius:999px;height:8px;overflow:hidden; }
-    .progress-glow { height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--blue));min-width:4px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 12px rgba(79,255,176,0.6); }
+/* ═══════════════════════════════ HERO ═══════════════════════════════ */
+.hero {
+  position: relative;
+  background: linear-gradient(160deg, #0064a8 0%, #0096c7 45%, #48cae4 80%, #90e0ef 100%);
+  padding: 52px 20px 72px;
+  overflow: hidden; text-align: center;
+}
+.sun {
+  position: absolute; top: 16px; right: 24px;
+  width: 54px; height: 54px;
+  background: radial-gradient(circle, #ffe234, #faa307);
+  border-radius: 50%;
+  box-shadow: 0 0 0 12px rgba(255,210,0,.15), 0 0 40px rgba(255,200,0,.5);
+  animation: pulse-sun 3s ease-in-out infinite;
+}
+@keyframes pulse-sun { 0%,100%{transform:scale(1)}50%{transform:scale(1.1)} }
+.palm { position: absolute; bottom: 24px; font-size: 3.4rem; animation: sway 4s ease-in-out infinite; transform-origin: bottom center; }
+.palm-l { left: 8px; animation-delay: -1s; }
+.palm-r { right: 8px; }
+@keyframes sway { 0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)} }
+.plane-hero { position: absolute; top: 32px; font-size: 1.5rem; animation: fly-hero 9s linear infinite; }
+@keyframes fly-hero { from{left:5%}to{left:92%} }
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.7rem, 7vw, 2.8rem);
+  font-weight: 900; color: white;
+  text-shadow: 0 3px 16px rgba(0,0,0,.25);
+  position: relative; z-index: 2; margin-bottom: 6px;
+  line-height: 1.1;
+}
+.hero-sub { color: rgba(255,255,255,.88); font-size: .9rem; font-weight: 700; position: relative; z-index: 2; }
+.waves { position: absolute; bottom: -1px; left: 0; right: 0; height: 48px; }
 
-    .stats-row { display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 20px 24px; }
-    .stat-card { background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 12px;text-align:center; }
-    .stat-emoji { font-size:24px;margin-bottom:6px; }
-    .stat-num { font-size:22px;font-weight:900;letter-spacing:-1px;line-height:1; }
-    .stat-label { font-size:11px;color:var(--muted);font-weight:600;margin-top:4px; }
+/* ═══════════════════════════════ CLOCKS ═══════════════════════════════ */
+.clocks-strip {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  background: white; box-shadow: 0 2px 16px rgba(0,0,0,.1);
+  position: sticky; top: 0; z-index: 100;
+}
+.clock-half {
+  padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+}
+.clock-half.fr { background: linear-gradient(135deg,#eef2ff,#dde6ff); }
+.clock-half.re { background: linear-gradient(135deg,#fff2eb,#ffe5d4); }
+.clock-flag { font-size: 1.6rem; flex-shrink: 0; }
+.clock-info { flex: 1; min-width: 0; }
+.clock-city { font-weight: 800; font-size: .72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clock-time-big { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 700; line-height: 1; }
+.clock-half.fr .clock-time-big { color: var(--fr); }
+.clock-half.re .clock-time-big { color: var(--re); }
+.clock-date { font-size: .58rem; color: var(--muted); margin-top: 1px; }
+.clock-weather { text-align: right; flex-shrink: 0; }
+.w-icon { font-size: 1.4rem; line-height: 1; }
+.w-temp { font-weight: 900; font-size: .88rem; margin-top: 1px; }
+.clock-half.fr .w-temp { color: var(--fr); }
+.clock-half.re .w-temp { color: var(--re); }
+.w-label { font-size: .55rem; color: var(--muted); line-height: 1.2; max-width: 56px; text-align: right; }
+.clock-divider {
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 2px; padding: 0 4px;
+  background: white;
+}
+.diff-badge {
+  background: var(--sand); color: #7a5800;
+  font-weight: 900; font-size: .65rem;
+  padding: 3px 6px; border-radius: 20px; white-space: nowrap;
+}
+.diff-label { font-size: .5rem; color: var(--muted); }
 
-    .section-title { padding:0 20px 12px;font-size:18px;font-weight:800;letter-spacing:-0.3px; }
-    .recent-scroll { display:flex;gap:12px;padding:0 20px 24px;overflow-x:auto;scrollbar-width:none; }
-    .recent-card { flex-shrink:0;width:130px;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform 0.2s; }
-    .recent-card:active { transform:scale(0.95); }
-    .recent-img { width:100%;height:100px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden; }
-    .recent-img img { width:100%;height:100%;object-fit:cover; }
-    .recent-info { padding:10px; }
-    .recent-animal { font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .recent-author { font-size:11px;color:var(--muted);margin-top:2px; }
+/* ═══════════════════════════════ NAV TABS (bottom) ═══════════════════ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid #eee;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px; padding: 10px 4px 8px;
+  border: none; background: transparent;
+  font-family: 'Nunito', sans-serif;
+  font-size: .58rem; font-weight: 700; color: var(--muted);
+  cursor: pointer; transition: all .2s; line-height: 1;
+}
+.tab-icon { font-size: 1.3rem; }
+.tab.active { color: var(--ocean); }
+.tab.active .tab-icon { transform: scale(1.15); }
 
-    /* UPLOAD */
-    .upload-screen { padding:20px; padding-bottom:80px; }
-    .screen-title { font-size:26px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px; }
-    .screen-sub { font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.5; }
-    .input-group { margin-bottom:14px; }
-    .input-label { font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px; }
-    .nice-input { width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;color:var(--text);font-family:'Outfit',sans-serif;font-size:16px;font-weight:500;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
-    .nice-input:focus { border-color:var(--green);box-shadow:0 0 0 3px rgba(79,255,176,0.12); }
-    .nice-input::placeholder { color:var(--muted); }
+/* ═══════════════════════════════ MAIN CONTENT ═══════════════════════ */
+.main {
+  padding: 16px 14px 90px;
+  max-width: 600px; margin: 0 auto;
+}
 
-    .camera-zone { position:relative;border-radius:24px;overflow:hidden;background:var(--card);border:2px dashed rgba(255,255,255,0.12);min-height:220px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.3s,background 0.3s;margin-bottom:14px; }
-    .camera-zone.has-image { border-style:solid;border-color:var(--green); }
-    .camera-zone input[type="file"] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:0; }
-    .camera-placeholder { text-align:center;pointer-events:none; }
-    .camera-icon { font-size:56px;margin-bottom:12px;display:block;filter:drop-shadow(0 0 20px rgba(79,255,176,0.3)); }
-    .camera-text { font-size:16px;font-weight:700;margin-bottom:6px; }
-    .camera-hint { font-size:13px;color:var(--muted); }
-    .preview-photo { width:100%;max-height:300px;object-fit:cover;display:none;border-radius:22px; }
+/* ═══════════════════════════════ PANELS ═══════════════════════════════ */
+.panel { display: none; animation: fadeUp .3s ease; }
+.panel.active { display: block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
 
-    .detected-card { background:linear-gradient(135deg,rgba(79,255,176,0.08),rgba(79,179,255,0.08));border:1.5px solid rgba(79,255,176,0.25);border-radius:20px;padding:18px;margin-bottom:14px;display:none;animation:slideUp 0.4s ease; }
-    @keyframes slideUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
-    .detected-card.visible { display:block; }
-    .detected-top { display:flex;align-items:center;gap:12px;margin-bottom:10px; }
-    .detected-emoji-big { font-size:44px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
-    .detected-info { flex:1; }
-    .detected-tag { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--green);margin-bottom:4px; }
-    .detected-name { font-size:22px;font-weight:900;letter-spacing:-0.5px;line-height:1.1; }
-    .detected-scientific { font-size:12px;color:var(--muted);font-style:italic;margin-top:3px; }
-    .detected-desc-text { font-size:13px;color:var(--muted);line-height:1.5; }
-    .badge-new { display:inline-block;background:var(--green);color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;margin-top:8px;text-transform:uppercase;letter-spacing:1px; }
-    .badge-already { display:inline-block;background:rgba(255,107,107,0.2);color:#ff6b6b;border:1px solid rgba(255,107,107,0.4);font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;margin-top:8px;text-transform:uppercase;letter-spacing:1px; }
+/* ═══════════════════════════════ SECTION LABEL ═════════════════════ */
+.section-label {
+  font-size: .65rem; font-weight: 900; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 18px 0 10px; display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: #e0e0ef; }
 
-    .status-pill { display:none;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;margin-bottom:14px; }
-    .status-pill.visible { display:flex; }
-    .status-pill.loading { background:rgba(79,179,255,0.1);color:var(--blue);border:1px solid rgba(79,179,255,0.2); }
-    .status-pill.success { background:rgba(79,255,176,0.1);color:var(--green);border:1px solid rgba(79,255,176,0.2); }
-    .status-pill.error { background:rgba(255,107,107,0.1);color:#ff6b6b;border:1px solid rgba(255,107,107,0.2); }
-    .spin { width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:rotate 0.7s linear infinite;flex-shrink:0; }
-    @keyframes rotate { to{transform:rotate(360deg)} }
+/* ═══════════════════════════════ DIFF GRID ═════════════════════════ */
+.diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.diff-card {
+  border-radius: var(--radius); padding: 16px 14px;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.diff-card.fr { background: linear-gradient(135deg,#1a4fc4,#4a7aff); color: white; }
+.diff-card.re { background: linear-gradient(135deg,#ff5500,#ff8c40); color: white; }
+.diff-card-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.diff-card-label { font-size: .58rem; font-weight: 800; letter-spacing: .1em; opacity: .8; text-transform: uppercase; margin-bottom: 3px; }
+.diff-card-value { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.diff-card-sub { font-size: .68rem; opacity: .75; margin-top: 4px; line-height: 1.3; }
+.diff-card-deco { position: absolute; right: -10px; bottom: -10px; font-size: 4rem; opacity: .12; transform: rotate(-15deg); pointer-events: none; }
 
-    .cta-btn { width:100%;padding:18px;border-radius:18px;border:none;font-family:'Outfit',sans-serif;font-size:17px;font-weight:800;cursor:pointer;transition:all 0.2s;background:linear-gradient(135deg,var(--green),var(--blue));color:#000;letter-spacing:-0.2px;position:relative;overflow:hidden; }
-    .cta-btn::after { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent); }
-    .cta-btn:active { transform:scale(0.97); }
-    .cta-btn:disabled { opacity:0.35;cursor:not-allowed;transform:none; }
+/* ═══════════════════════════════ FACT CARD ═════════════════════════ */
+.fact-card {
+  background: linear-gradient(135deg,#0096c7,#00b4d8);
+  border-radius: var(--radius); padding: 18px;
+  color: white; margin-bottom: 14px; position: relative; overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,150,199,.3);
+}
+.fact-label { font-size: .62rem; font-weight: 900; letter-spacing: .14em; opacity: .8; text-transform: uppercase; margin-bottom: 8px; }
+.fact-text { font-size: .92rem; font-weight: 700; line-height: 1.5; }
+.fact-deco { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 3rem; opacity: .18; }
+.fact-nav { display: flex; gap: 8px; margin-top: 12px; }
+.fact-btn {
+  background: rgba(255,255,255,.2); border: none; color: white;
+  border-radius: 10px; padding: 8px 14px;
+  font-family: 'Nunito', sans-serif; font-size: .8rem; font-weight: 700;
+  cursor: pointer; transition: all .2s; flex: 1; text-align: center;
+}
+.fact-btn:active { background: rgba(255,255,255,.35); }
 
-    .config-warn { background:rgba(255,228,79,0.08);border:1.5px solid rgba(255,228,79,0.25);border-radius:16px;padding:14px 16px;font-size:13px;color:var(--yellow);margin-bottom:16px;line-height:1.5; }
+/* ═══════════════════════════════ SHARED CARD ═══════════════════════ */
+.card {
+  background: white; border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px; margin-bottom: 12px;
+  border: 1px solid rgba(0,0,0,.04);
+}
+.card-re { background: var(--card-re); border-left: 4px solid var(--re); }
+.shared-trio { display: flex; gap: 8px; }
+.shared-item {
+  flex: 1; border-radius: 12px; padding: 12px 10px; text-align: center;
+}
+.shared-item.a { background: linear-gradient(135deg,#eef2ff,#dde6ff); }
+.shared-item.b { background: linear-gradient(135deg,#e8fff8,#ccfff0); }
+.shared-item.c { background: linear-gradient(135deg,#fff8e0,#fff0c0); }
+.shared-icon { font-size: 1.4rem; margin-bottom: 4px; }
+.shared-title { font-weight: 800; font-size: .72rem; color: var(--text); margin-bottom: 2px; }
+.shared-desc { font-size: .62rem; color: var(--muted); line-height: 1.3; }
 
-    /* GALLERY */
-    .gallery-screen { padding:16px 16px 0; }
-    .gallery-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
-    .filter-scroll { display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none; }
-    .chip { flex-shrink:0;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--muted);transition:all 0.2s;white-space:nowrap; }
-    .chip.active { background:rgba(79,255,176,0.12);border-color:rgba(79,255,176,0.4);color:var(--green); }
-    .gallery-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
-    .g-card { background:var(--card);border-radius:20px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform 0.2s;animation:fadeUp 0.4s ease both; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
-    .g-card:active { transform:scale(0.96); }
-    .g-img { width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface); }
-    .g-img-placeholder { width:100%;aspect-ratio:1;background:linear-gradient(135deg,var(--surface),var(--card));display:flex;align-items:center;justify-content:center;font-size:48px; }
-    .g-body { padding:12px; }
-    .g-name { font-size:14px;font-weight:800;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .g-author { font-size:12px;color:var(--muted);margin-top:3px;font-weight:500; }
+/* ═══════════════════════════════ METEO ═════════════════════════════ */
+.meteo-hero {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+}
+.meteo-card {
+  border-radius: var(--radius); padding: 18px 14px; text-align: center;
+  position: relative; overflow: hidden; box-shadow: var(--shadow);
+  color: white;
+}
+.meteo-card.fr { background: linear-gradient(160deg,#1a4fc4,#5b8aff); }
+.meteo-card.re { background: linear-gradient(160deg,#ff5500,#ff9a40); }
+.meteo-city-label { font-weight: 800; font-size: .68rem; opacity: .85; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.meteo-big-icon { font-size: 3.2rem; display: block; min-height: 46px; margin-bottom: 4px; }
+.meteo-temp { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; line-height: 1; }
+.meteo-desc { font-size: .72rem; opacity: .8; margin-top: 4px; }
+.meteo-pills { display: flex; gap: 5px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.meteo-pill { background: rgba(255,255,255,.18); border-radius: 8px; padding: 4px 8px; font-size: .65rem; font-weight: 700; }
+.meteo-deco { position: absolute; right: -8px; bottom: -8px; font-size: 5rem; opacity: .08; }
 
-    /* LEADERBOARD */
-    .lb-screen { padding:20px; }
-    .podium { display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:8px 0 28px; }
-    .podium-item { flex:1;text-align:center;max-width:110px; }
-    .podium-avatar { width:52px;height:52px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000; }
-    .podium-item.first .podium-avatar { width:64px;height:64px;font-size:22px;background:linear-gradient(135deg,#ffd700,#ffaa00);box-shadow:0 0 24px rgba(255,215,0,0.4); }
-    .podium-item.second .podium-avatar { background:linear-gradient(135deg,#c0c0c0,#909090); }
-    .podium-item.third .podium-avatar { background:linear-gradient(135deg,#cd7f32,#a0522d); }
-    .podium-name { font-size:13px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .podium-score { font-size:22px;font-weight:900;letter-spacing:-1px; }
-    .podium-item.first .podium-score { color:var(--yellow);font-size:28px; }
-    .podium-item.second .podium-score { color:#c0c0c0; }
-    .podium-item.third .podium-score { color:#cd7f32; }
-    .podium-bar { margin-top:8px;border-radius:8px 8px 0 0;background:var(--card);border:1px solid var(--border); }
-    .podium-item.first .podium-bar { height:60px; }
-    .podium-item.second .podium-bar { height:40px; }
-    .podium-item.third .podium-bar { height:28px; }
+.compare-card {
+  background: white; border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px;
+}
+.compare-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-bottom: 1px solid #f0f0f8;
+}
+.compare-row:last-child { border-bottom: none; }
+.compare-icon { font-size: 1.2rem; width: 28px; text-align: center; flex-shrink: 0; }
+.compare-label { font-weight: 700; font-size: .78rem; flex: 1; }
+.compare-vals { display: flex; gap: 6px; }
+.cv { font-size: .75rem; font-weight: 800; padding: 3px 10px; border-radius: 100px; }
+.cv.fr { background: var(--card-fr); color: var(--fr); }
+.cv.re { background: var(--card-re); color: var(--re); }
+.cv.diff { background: linear-gradient(135deg,#ffe8d6,#ffd6b3); color: #7a3000; }
 
-    .lb-list { display:flex;flex-direction:column;gap:10px; }
-    .lb-item { display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 16px;animation:fadeUp 0.4s ease both; }
-    .lb-rank-num { font-size:16px;font-weight:900;width:28px;text-align:center;color:var(--muted);flex-shrink:0; }
-    .lb-av { width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0; }
-    .lb-iname { font-size:16px;font-weight:800; }
-    .lb-isub { font-size:12px;color:var(--muted);margin-top:2px; }
-    .lb-iscore { margin-left:auto;font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green); }
-    .lb-iscore-label { font-size:11px;color:var(--muted);text-align:right; }
+/* ═══════════════════════════════ QUIZ ═════════════════════════════ */
+.score-bar {
+  background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; margin-bottom: 12px;
+}
+.score-side { text-align: center; }
+.score-flag { font-size: 1.5rem; }
+.score-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.score-side.fr .score-num { color: var(--fr); }
+.score-side.re .score-num { color: var(--re); }
+.score-label { font-size: .62rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.score-vs { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #ddd; }
+.quiz-q-card {
+  border-radius: var(--radius); padding: 22px 18px;
+  box-shadow: var(--shadow); margin-bottom: 12px; color: white;
+  position: relative; overflow: hidden; transition: all .3s;
+}
+.quiz-q-card.ocean { background: linear-gradient(135deg,#0077b6,#00b4d8); }
+.quiz-q-card.volcano { background: linear-gradient(135deg,#d62828,#ff5500); }
+.quiz-q-card.jungle { background: linear-gradient(135deg,#006400,#06d6a0); }
+.quiz-q-card.culture { background: linear-gradient(135deg,#6a0dad,#ef476f); }
+.q-badge { display: inline-block; background: rgba(255,255,255,.2); font-size: .62rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 4px 11px; border-radius: 100px; margin-bottom: 10px; }
+.q-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; line-height: 1.4; margin-bottom: 6px; }
+.q-turn { font-size: .73rem; opacity: .8; font-weight: 600; }
+.q-deco { position: absolute; right: 14px; top: 14px; font-size: 3.5rem; opacity: .14; }
+.opts-grid { display: flex; flex-direction: column; gap: 8px; }
+.opt {
+  background: white; border: 2px solid #e8e8f0;
+  border-radius: 13px; padding: 13px 16px;
+  font-family: 'Nunito', sans-serif; font-size: .88rem; font-weight: 700;
+  cursor: pointer; text-align: left; transition: all .2s; color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+.opt:active:not(:disabled) { transform: scale(.98); }
+.opt.correct { border-color: #06d6a0; background: #e8fff8; color: #006644; }
+.opt.wrong { border-color: var(--hibiscus); background: #fff0f4; color: #a00030; }
+.opt:disabled { cursor: default; }
+.quiz-footer { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 
-    /* CONFIG */
-    .config-screen { padding:20px; }
-    .config-step { background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:12px; }
-    .config-step-header { display:flex;align-items:center;gap:12px;margin-bottom:12px; }
-    .step-badge { width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#000;flex-shrink:0; }
-    .step-heading { font-size:16px;font-weight:800; }
-    .step-desc { font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px; }
-    .step-desc a { color:var(--blue); }
-    .code-block { background:var(--surface);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--green);line-height:1.8;font-family:monospace;word-break:break-all;margin-bottom:8px; }
-    .config-status-box { background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:12px; }
-    .config-status-title { font-size:16px;font-weight:800;margin-bottom:12px; }
-    .status-line { font-size:14px;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--border);font-weight:500; }
-    .status-line:last-child { border-bottom:none; }
-    textarea.nice-input { resize:vertical;min-height:120px; }
+/* ═══════════════════════════════ ACTUALITÉS ═══════════════════════ */
+.news-header {
+  background: linear-gradient(135deg,#ff5500,#ff8c40);
+  border-radius: var(--radius); padding: 18px;
+  color: white; margin-bottom: 14px; position: relative; overflow: hidden;
+  box-shadow: 0 8px 28px rgba(255,85,0,.3);
+}
+.news-header-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 900; margin-bottom: 4px; }
+.news-header-sub { font-size: .78rem; opacity: .85; font-weight: 600; }
+.news-header-deco { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 4rem; opacity: .2; }
 
-    /* BOTTOM NAV */
-    .bottom-nav { position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bottom));background:rgba(8,11,18,0.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-around;padding-top:10px;z-index:200; }
-    .nav-item { flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 0;transition:all 0.2s;border:none;background:none; }
-    .nav-item:active { transform:scale(0.88); }
-    .nav-icon { font-size:24px;line-height:1;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
-    .nav-item.active .nav-icon { transform:scale(1.2); }
-    .nav-label { font-size:10px;font-weight:700;color:var(--muted);transition:color 0.2s;text-transform:uppercase;letter-spacing:0.5px; }
-    .nav-item.active .nav-label { color:var(--green); }
-    .nav-add { flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:0;border:none;background:none; }
-    .nav-add-btn { width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 20px rgba(79,255,176,0.35);transition:all 0.2s;margin-top:-14px; }
-    .nav-add:active .nav-add-btn { transform:scale(0.9); }
-    .nav-add-label { font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px; }
+.news-filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
+.news-filters::-webkit-scrollbar { display: none; }
+.news-filter {
+  white-space: nowrap; padding: 7px 14px; border-radius: 100px;
+  border: 2px solid #e0e0f0; background: white;
+  font-family: 'Nunito', sans-serif; font-size: .75rem; font-weight: 800;
+  cursor: pointer; transition: all .2s; color: var(--muted); flex-shrink: 0;
+}
+.news-filter.active { background: var(--re); border-color: var(--re); color: white; }
 
-    /* MODAL */
-    .modal-bg { position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);z-index:500;display:none;align-items:flex-end;justify-content:center; }
-    .modal-bg.open { display:flex; }
-    .modal-sheet { width:100%;max-width:520px;background:var(--surface);border-radius:28px 28px 0 0;overflow:hidden;animation:sheetUp 0.35s cubic-bezier(0.34,1.2,0.64,1);max-height:90vh;overflow-y:auto; }
-    @keyframes sheetUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
-    .modal-handle { width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:12px auto 0; }
-    .modal-photo { width:100%;max-height:280px;object-fit:cover; }
-    .modal-info { padding:20px; }
-    .modal-animal-name { font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:6px; }
-    .modal-scientific { font-size:13px;color:var(--muted);font-style:italic;margin-bottom:12px; }
-    .modal-desc-text { font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px; }
-    .modal-tags { display:flex;gap:8px;flex-wrap:wrap; }
-    .modal-tag { background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600; }
+.news-feed { display: flex; flex-direction: column; gap: 10px; }
+.news-item {
+  background: white; border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow: hidden;
+  border-left: 5px solid;
+  animation: fadeUp .3s ease;
+}
+.news-item.eruption { border-left-color: #d62828; }
+.news-item.ocean { border-left-color: var(--ocean); }
+.news-item.culture { border-left-color: #6a0dad; }
+.news-item.nature { border-left-color: var(--leaf); }
+.news-item.alerte { border-left-color: var(--sand); }
+.news-body { padding: 14px 16px; }
+.news-cat-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.news-cat-badge {
+  font-size: .58rem; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 100px;
+}
+.news-item.eruption .news-cat-badge { background: #fff0f0; color: #d62828; }
+.news-item.ocean .news-cat-badge { background: #e8f6ff; color: var(--ocean); }
+.news-item.culture .news-cat-badge { background: #f5eeff; color: #6a0dad; }
+.news-item.nature .news-cat-badge { background: #e8fff8; color: #006644; }
+.news-item.alerte .news-cat-badge { background: #fff8e0; color: #7a5800; }
+.news-time { font-size: .6rem; color: var(--muted); font-weight: 600; }
+.news-title { font-weight: 800; font-size: .92rem; color: var(--text); line-height: 1.4; margin-bottom: 5px; }
+.news-summary { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+.news-emoji { font-size: 1.1rem; }
 
-    /* TOAST */
-    .toast { position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:800;z-index:1000;opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;pointer-events:none; }
-    .toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+.live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #06d6a0; margin-right: 4px;
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
 
-    /* EMPTY */
-    .empty { text-align:center;padding:60px 20px;color:var(--muted); }
-    .empty-big { font-size:56px;margin-bottom:14px; }
-    .empty-title { font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px; }
-    .empty-sub { font-size:14px;line-height:1.5; }
-    .refresh-btn { background:none;border:1.5px solid var(--border);border-radius:999px;color:var(--muted);padding:6px 14px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer; }
+.news-refresh {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-bottom: 14px;
+  font-size: .73rem; color: var(--muted); font-weight: 700;
+}
 
-    .emoji-opt { font-size:22px;cursor:pointer;padding:4px;border-radius:8px;transition:transform 0.15s,background 0.15s;line-height:1; }
-    .emoji-opt:hover { background:rgba(255,255,255,0.1);transform:scale(1.2); }
-    .emoji-opt.selected { background:rgba(79,255,176,0.2);transform:scale(1.15);outline:2px solid var(--green);border-radius:8px; }
-  </style>
+/* ═══════════════════════════════ DISTANCE ═════════════════════════ */
+.distance-hero {
+  background: linear-gradient(135deg,#06d6a0,#0096c7);
+  border-radius: var(--radius); padding: 24px 18px; text-align: center;
+  color: white; margin-bottom: 12px;
+  box-shadow: 0 8px 36px rgba(6,214,160,.3); position: relative; overflow: hidden;
+}
+.distance-km { font-family: 'Playfair Display', serif; font-size: 3.2rem; font-weight: 900; line-height: 1; }
+.distance-label { font-size: .82rem; opacity: .85; font-weight: 600; margin-bottom: 20px; }
+.route { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.route-city { text-align: center; }
+.route-flag { font-size: 2rem; }
+.route-name { font-weight: 800; font-size: .88rem; margin-top: 3px; }
+.route-sub { font-size: .65rem; opacity: .75; }
+.route-line { flex: 1; min-width: 50px; height: 2px; background: rgba(255,255,255,.4); border-radius: 2px; position: relative; }
+.plane-anim { position: absolute; top: 50%; transform: translateY(-50%); font-size: 1rem; animation: fly-conn 4s linear infinite; }
+@keyframes fly-conn { from{left:-5%}to{left:105%} }
+
+.stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 12px; }
+.stat-card {
+  background: white; border-radius: var(--radius); padding: 16px 14px;
+  text-align: center; box-shadow: var(--shadow); border-top: 4px solid;
+}
+.stat-card:nth-child(1){border-top-color:var(--ocean)}
+.stat-card:nth-child(2){border-top-color:var(--hibiscus)}
+.stat-card:nth-child(3){border-top-color:var(--leaf)}
+.stat-card:nth-child(4){border-top-color:var(--sand)}
+.stat-icon { font-size: 1.5rem; margin-bottom: 5px; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1; }
+.stat-label { font-size: .62rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-top: 3px; }
+
+/* ═══════════════════════════════ BUTTONS ═════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 11px 18px; border-radius: 11px; border: none;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .84rem;
+  cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(.97); }
+.btn-ocean { background: var(--ocean); color: white; }
+.btn-leaf { background: var(--leaf); color: #003d30; }
+.btn-ghost { background: white; color: var(--muted); border: 2px solid #e0e0f0; }
+
+/* ═══════════════════════════════ TOAST ═══════════════════════════ */
+.toast-zone { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 6px; width: 90%; max-width: 360px; }
+.toast { padding: 12px 18px; border-radius: 13px; font-weight: 700; font-size: .82rem; box-shadow: 0 8px 30px rgba(0,0,0,.2); animation: toast-in .3s ease; text-align: center; }
+.toast.ok { background: var(--leaf); color: #003d30; }
+.toast.info { background: var(--sand); color: #5a3e00; }
+.toast.err { background: var(--hibiscus); color: white; }
+@keyframes toast-in { from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)} }
+</style>
 </head>
 <body>
 
-<div class="toast" id="toast"></div>
+<div class="toast-zone" id="toasts"></div>
 
-<!-- MODAL -->
-<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <img class="modal-photo" id="modal-photo" src="" alt="" style="display:none" />
-    <div class="modal-info">
-      <div class="modal-animal-name" id="modal-name"></div>
-      <div class="modal-scientific" id="modal-sci"></div>
-      <div class="modal-desc-text" id="modal-desc"></div>
-      <div class="modal-tags" id="modal-tags"></div>
-      <button onclick="deleteEntry()" style="margin-top:20px;width:100%;padding:14px;border-radius:14px;border:1.5px solid rgba(255,107,107,0.4);background:rgba(255,107,107,0.1);color:#ff6b6b;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">🗑️ Supprimer cette entrée</button>
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="sun"></div>
+  <div class="plane-hero">✈️</div>
+  <div class="palm palm-l">🌴</div>
+  <div class="palm palm-r">🌴</div>
+  <h1 class="hero-title">Deux Mondes,<br>Un Lien</h1>
+  <p class="hero-sub">Oullins 🤝 L'Éperon, La Réunion</p>
+  <svg class="waves" viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#f7f3ee" d="M0,24 C360,48 720,0 1080,24 C1260,36 1380,16 1440,24 L1440,48 L0,48 Z"/>
+  </svg>
+</div>
+
+<!-- ═══ CLOCKS (sticky) ═══ -->
+<div class="clocks-strip">
+  <div class="clock-half fr">
+    <div class="clock-flag">🇫🇷</div>
+    <div class="clock-info">
+      <div class="clock-city">Oullins</div>
+      <div class="clock-time-big" id="clk-fr">--:--</div>
+      <div class="clock-date" id="dat-fr">--</div>
+    </div>
+    <div class="clock-weather">
+      <div class="w-icon" id="wi-fr">🌡️</div>
+      <div class="w-temp" id="wt-fr">--°</div>
+      <div class="w-label" id="wl-fr">…</div>
+    </div>
+  </div>
+  <div class="clock-divider">
+    <div class="diff-badge">+3h</div>
+    <div class="diff-label">décalage</div>
+  </div>
+  <div class="clock-half re">
+    <div class="clock-flag">🏝️</div>
+    <div class="clock-info">
+      <div class="clock-city">L'Éperon</div>
+      <div class="clock-time-big" id="clk-re">--:--</div>
+      <div class="clock-date" id="dat-re">--</div>
+    </div>
+    <div class="clock-weather">
+      <div class="w-icon" id="wi-re">🌡️</div>
+      <div class="w-temp" id="wt-re">--°</div>
+      <div class="w-label" id="wl-re">…</div>
     </div>
   </div>
 </div>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="topbar-logo">🐾 Animodex</div>
-  <div class="topbar-badge">
-    <div class="live-dot"></div>
-    <span id="topbar-count">0</span> espèces
-  </div>
-</div>
+<!-- ═══ MAIN ═══ -->
+<div class="main">
 
-<div class="page-content">
-
-  <!-- HOME -->
-  <div class="section active" id="tab-home">
-    <div class="home-hero">
-      <div class="hero-orb">
-        <div class="hero-orb-ring"></div>
-        <div class="hero-orb-inner">🌍</div>
+  <!-- PANEL: Nos Différences -->
+  <div class="panel active" id="panel-diff">
+    <div class="section-label">En ce moment</div>
+    <div class="diff-grid">
+      <div class="diff-card fr">
+        <div class="diff-card-icon">🕐</div>
+        <div class="diff-card-label">Heure Oullins</div>
+        <div class="diff-card-value" id="d-clk-fr">--:--</div>
+        <div class="diff-card-sub">Rhône-Alpes, France</div>
+        <div class="diff-card-deco">🏙️</div>
       </div>
-      <div class="hero-number" id="hero-num">0</div>
-      <div class="hero-label">espèces découvertes</div>
-      <div class="hero-sublabel">sur <strong>~8 700 000</strong> espèces animales sur Terre</div>
-      <div class="progress-pill">
-        <div class="progress-glow" id="progress-glow" style="width:0%"></div>
+      <div class="diff-card re">
+        <div class="diff-card-icon">🕐</div>
+        <div class="diff-card-label">Heure L'Éperon</div>
+        <div class="diff-card-value" id="d-clk-re">--:--</div>
+        <div class="diff-card-sub">Saint-Paul, UTC+4</div>
+        <div class="diff-card-deco">🌋</div>
+      </div>
+      <div class="diff-card fr" id="d-wx-fr">
+        <div class="diff-card-icon">⏳</div>
+        <div class="diff-card-label">Météo Oullins</div>
+        <div class="diff-card-value">--°C</div>
+        <div class="diff-card-sub">Chargement…</div>
+        <div class="diff-card-deco">☁️</div>
+      </div>
+      <div class="diff-card re" id="d-wx-re">
+        <div class="diff-card-icon">⏳</div>
+        <div class="diff-card-label">Météo L'Éperon</div>
+        <div class="diff-card-value">--°C</div>
+        <div class="diff-card-sub">Chargement…</div>
+        <div class="diff-card-deco">🌊</div>
       </div>
     </div>
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-emoji">📸</div><div class="stat-num" id="stat-photos">0</div><div class="stat-label">Photos</div></div>
-      <div class="stat-card"><div class="stat-emoji">👥</div><div class="stat-num" id="stat-players">0</div><div class="stat-label">Joueurs</div></div>
-      <div class="stat-card"><div class="stat-emoji">🦁</div><div class="stat-num" id="stat-species">0</div><div class="stat-label">Espèces</div></div>
-    </div>
-    <div class="section-title">Captures récentes</div>
-    <div class="recent-scroll" id="recent-scroll">
-      <div class="empty" style="padding:20px;width:100%"><div style="font-size:32px">🦕</div><div style="margin-top:8px;font-size:14px">Aucune capture encore</div></div>
-    </div>
-  </div>
 
-  <!-- UPLOAD -->
-  <div class="section" id="tab-upload">
-    <div class="upload-screen">
-      <div class="screen-title">Nouvelle capture 📸</div>
-      <div class="screen-sub">Immortalise ta rencontre avec un animal !</div>
-      <div id="cfg-warn" class="config-warn" style="display:none">⚠️ Firebase non configuré.</div>
+    <div class="section-label">Le saviez-vous ?</div>
+    <div class="fact-card">
+      <div class="fact-label">🐚 Anecdote</div>
+      <div class="fact-text" id="fact-text">…</div>
+      <div class="fact-deco" id="fact-deco">🏝️</div>
+      <div class="fact-nav">
+        <button class="fact-btn" onclick="nextFact()">Suivante →</button>
+        <button class="fact-btn" id="fact-liked" onclick="likeFact()">♡ J'adore</button>
+      </div>
+    </div>
 
-      <div class="camera-zone" id="camera-zone">
-        <input type="file" accept="image/*" id="file-input" onchange="handleFile(this.files[0])" />
-        <div class="camera-placeholder" id="cam-placeholder">
-          <span class="camera-icon">📷</span>
-          <div class="camera-text">Ajoute ta photo</div>
-          <div class="camera-hint">Appuie pour ouvrir la galerie ou la caméra</div>
+    <div class="section-label">Ce que vous partagez</div>
+    <div class="card">
+      <div class="shared-trio">
+        <div class="shared-item a">
+          <div class="shared-icon">🇫🇷</div>
+          <div class="shared-title">Même pays</div>
+          <div class="shared-desc">DROM depuis 1946</div>
         </div>
-        <img class="preview-photo" id="preview-photo" />
-      </div>
-
-      <div class="input-group">
-        <div class="input-label">Ton prénom / pseudo *</div>
-        <input class="nice-input" id="author-input" type="text" placeholder="Ex : Lucas, Sacha..." autocomplete="off" oninput="checkFormReady()" />
-      </div>
-
-      <div class="input-group">
-        <div class="input-label">Animal rencontré *</div>
-        <input class="nice-input" id="animal-input" type="text" placeholder="Ex : Lion, Mésange bleue, Méduse..." oninput="checkFormReady()" />
-      </div>
-
-      <div class="input-group">
-        <div class="input-label">Emoji de l'animal</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-          <span id="selected-emoji" style="font-size:36px">🐾</span>
-          <span style="font-size:13px;color:var(--muted)">Choisis ci-dessous</span>
+        <div class="shared-item b">
+          <div class="shared-icon">📡</div>
+          <div class="shared-title">Même réseau</div>
+          <div class="shared-desc">SMS sans surcoût</div>
         </div>
-        <input type="hidden" id="emoji-hidden" value="" />
-        <div id="emoji-picker" style="display:flex;flex-wrap:wrap;gap:6px;max-height:90px;overflow-y:auto;background:var(--card);border-radius:14px;padding:12px;border:1.5px solid var(--border)"></div>
-      </div>
-
-      <div class="input-group">
-        <div class="input-label">Lieu 📍</div>
-        <input class="nice-input" id="lieu-input" type="text" placeholder="Ex : Safari Kenya, Zoo de Paris, Forêt de Fontainebleau..." />
-      </div>
-
-      <div class="input-group">
-        <div class="input-label">Anecdote / Note ✍️</div>
-        <textarea class="nice-input" id="note-input" placeholder="Raconte ta rencontre, une info fun sur l'animal..." rows="3" style="resize:vertical"></textarea>
-      </div>
-
-      <div class="status-pill" id="status-pill">
-        <div class="spin" id="status-spin" style="display:none"></div>
-        <span id="status-msg"></span>
-      </div>
-      <button class="cta-btn" id="submit-btn" onclick="submitEntry()" disabled>Enregistrer la découverte 🐾</button>
-    </div>
-  </div>
-
-  <!-- GALLERY -->
-  <div class="section" id="tab-gallery">
-    <div class="gallery-screen">
-      <div class="gallery-header">
-        <div class="screen-title" style="margin-bottom:0">Galerie</div>
-        <button class="refresh-btn" onclick="loadEntries()">↻ Rafraîchir</button>
-      </div>
-      <div class="filter-scroll" id="filter-scroll"></div>
-      <div class="gallery-grid" id="gallery-grid">
-        <div class="empty" style="grid-column:1/-1"><div class="empty-big">🦕</div><div class="empty-title">Aucune découverte</div><div class="empty-sub">Soyez les premiers !</div></div>
+        <div class="shared-item c">
+          <div class="shared-icon">💶</div>
+          <div class="shared-title">Même monnaie</div>
+          <div class="shared-desc">L'euro partout</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- LEADERBOARD -->
-  <div class="section" id="tab-lb">
-    <div class="lb-screen">
-      <div class="screen-title">Classement 🏆</div>
-      <div id="podium-wrap"></div>
-      <div class="lb-list" id="lb-list">
-        <div class="empty"><div class="empty-big">🏅</div><div class="empty-title">Classement vide</div><div class="empty-sub">Capturez des animaux pour apparaître !</div></div>
+  <!-- PANEL: Météo -->
+  <div class="panel" id="panel-meteo">
+    <div class="section-label">Météo en direct</div>
+    <div class="meteo-hero">
+      <div class="meteo-card fr">
+        <div class="meteo-city-label">🇫🇷 Oullins</div>
+        <span class="meteo-big-icon" id="m-icon-fr">⏳</span>
+        <div class="meteo-temp" id="m-temp-fr">--°C</div>
+        <div class="meteo-desc" id="m-desc-fr">Chargement…</div>
+        <div class="meteo-pills">
+          <span class="meteo-pill" id="m-hum-fr">💧 --%</span>
+          <span class="meteo-pill" id="m-wind-fr">💨 --</span>
+        </div>
+        <div class="meteo-deco">🏙️</div>
       </div>
+      <div class="meteo-card re">
+        <div class="meteo-city-label">🏝️ L'Éperon</div>
+        <span class="meteo-big-icon" id="m-icon-re">⏳</span>
+        <div class="meteo-temp" id="m-temp-re">--°C</div>
+        <div class="meteo-desc" id="m-desc-re">Chargement…</div>
+        <div class="meteo-pills">
+          <span class="meteo-pill" id="m-hum-re">💧 --%</span>
+          <span class="meteo-pill" id="m-wind-re">💨 --</span>
+        </div>
+        <div class="meteo-deco">🌺</div>
+      </div>
+    </div>
+
+    <div class="section-label">Comparaison</div>
+    <div class="compare-card">
+      <div class="compare-row">
+        <div class="compare-icon">🌡️</div>
+        <div class="compare-label">Température</div>
+        <div class="compare-vals">
+          <span class="cv fr" id="c-temp-fr">--°C</span>
+          <span class="cv re" id="c-temp-re">--°C</span>
+        </div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-icon">💧</div>
+        <div class="compare-label">Humidité</div>
+        <div class="compare-vals">
+          <span class="cv fr" id="c-hum-fr">--%</span>
+          <span class="cv re" id="c-hum-re">--%</span>
+        </div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-icon">💨</div>
+        <div class="compare-label">Vent</div>
+        <div class="compare-vals">
+          <span class="cv fr" id="c-wind-fr">-- km/h</span>
+          <span class="cv re" id="c-wind-re">-- km/h</span>
+        </div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-icon">👔</div>
+        <div class="compare-label">Tenue du jour</div>
+        <div class="compare-vals">
+          <span class="cv fr" id="c-outfit-fr">--</span>
+          <span class="cv re" id="c-outfit-re">--</span>
+        </div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-icon">↕️</div>
+        <div class="compare-label">Écart</div>
+        <div class="compare-vals">
+          <span class="cv diff" id="c-diff">-- °C</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <button class="btn btn-ocean" onclick="loadWeather()">🔄 Actualiser</button>
+      <div style="font-size:.62rem;color:var(--muted);margin-top:6px;">Source : Open-Meteo.com</div>
     </div>
   </div>
 
-  <!-- CONFIG -->
-  <div class="section" id="tab-config">
-    <div class="config-screen">
-      <div class="screen-title">Configuration ⚙️</div>
-      <div class="screen-sub">Suis ces étapes une fois pour tout connecter.</div>
-      <div class="config-status-box">
-        <div class="config-status-title">État</div>
-        <div id="cfg-status-lines">Chargement...</div>
+  <!-- PANEL: Quiz -->
+  <div class="panel" id="panel-quiz">
+    <div class="score-bar">
+      <div class="score-side fr">
+        <div class="score-flag">🇫🇷</div>
+        <div class="score-num" id="sc-fr">0</div>
+        <div class="score-label">Oullins</div>
       </div>
-      <div class="config-step">
-        <div class="config-step-header"><div class="step-badge">1</div><div class="step-heading">Config Firebase</div></div>
-        <div class="step-desc">Sur <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → ton projet → ⚙ → "Ajouter app Web" → copie le firebaseConfig JSON ici.</div>
-        <textarea class="nice-input" id="fb-config-input" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...",...}'></textarea>
-        <button class="cta-btn" onclick="saveFbConfig()" style="margin-top:10px">Sauvegarder Firebase</button>
+      <div class="score-vs">vs</div>
+      <div class="score-side re">
+        <div class="score-flag">🏝️</div>
+        <div class="score-num" id="sc-re">0</div>
+        <div class="score-label">L'Éperon</div>
       </div>
-      <div class="config-step">
-        <div class="config-step-header"><div class="step-badge">2</div><div class="step-heading">Règles Firestore</div></div>
-        <div class="step-desc">Dans Firestore → Règles, colle et publie :</div>
-        <div class="code-block">rules_version = '2';<br>service cloud.firestore {<br>&nbsp;&nbsp;match /databases/{db}/documents {<br>&nbsp;&nbsp;&nbsp;&nbsp;match /{d=**} {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if true;<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;}<br>}</div>
-      </div>
-      <div class="config-step">
-        <div class="config-step-header"><div class="step-badge">3</div><div class="step-heading">Clé Gemini (gratuit 🎉)</div></div>
-        <div class="step-desc">Sur <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> → "Get API key" → "Create API key" → colle-la ici.</div>
-        <input class="nice-input" id="gemini-key-input" type="password" placeholder="AIza..." />
-        <button class="cta-btn" onclick="saveGeminiKey()" style="margin-top:10px">Sauvegarder la clé Gemini</button>
-      </div>
-      <div class="config-step">
-        <div class="config-step-header"><div class="step-badge">4</div><div class="step-heading">Déployer sur GitHub Pages</div></div>
-        <div class="step-desc">Crée un repo GitHub public → upload index.html → Settings → Pages → branch main → Partage le lien à tes amis !</div>
-      </div>
+    </div>
+    <div class="quiz-q-card ocean" id="q-card">
+      <div class="q-badge" id="q-cat">Géographie</div>
+      <div class="q-text" id="q-text">Chargement…</div>
+      <div class="q-turn" id="q-turn">Tour : 🇫🇷 Oullins</div>
+      <div class="q-deco" id="q-deco">🌊</div>
+    </div>
+    <div class="opts-grid" id="q-opts"></div>
+    <div class="quiz-footer" style="margin-top:12px">
+      <button class="btn btn-leaf" onclick="skipQ()">Passer →</button>
+      <span style="font-size:.72rem;color:var(--muted)">Q <span id="q-num">1</span>/15</span>
     </div>
   </div>
 
-</div>
+  <!-- PANEL: Actualités -->
+  <div class="panel" id="panel-news">
+    <div class="news-header">
+      <div class="news-header-title">🏝️ L'île en direct</div>
+      <div class="news-header-sub"><span class="live-dot"></span>Actualités de La Réunion</div>
+      <div class="news-header-deco">📰</div>
+    </div>
 
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav">
-  <button class="nav-item active" id="nav-home" onclick="switchTab('home',this)">
-    <span class="nav-icon">🏠</span><span class="nav-label">Accueil</span>
+    <div class="news-refresh">
+      <span class="live-dot"></span>
+      Mis à jour à <span id="news-time">--:--</span> · <button class="btn btn-ghost" onclick="newsLoaded=true;loadNews()" style="padding:5px 12px;font-size:.72rem">🔄 Refresh</button>
+    </div>
+
+    <div class="news-filters" id="news-filters">
+      <button class="news-filter active" onclick="filterNews('all', this)">🌴 Tout</button>
+      <button class="news-filter" onclick="filterNews('eruption', this)">🌋 Éruption</button>
+      <button class="news-filter" onclick="filterNews('ocean', this)">🐋 Océan</button>
+      <button class="news-filter" onclick="filterNews('nature', this)">🌿 Nature</button>
+      <button class="news-filter" onclick="filterNews('alerte', this)">⚠️ Alertes</button>
+      <button class="news-filter" onclick="filterNews('culture', this)">🎵 Culture</button>
+    </div>
+
+    <div class="news-feed" id="news-feed"></div>
+  </div>
+
+  <!-- PANEL: Distance -->
+  <div class="panel" id="panel-dist">
+    <div class="distance-hero">
+      <div class="distance-km">9 250</div>
+      <div class="distance-label">km entre Oullins et L'Éperon</div>
+      <div class="route">
+        <div class="route-city">
+          <div class="route-flag">🇫🇷</div>
+          <div class="route-name">Oullins</div>
+          <div class="route-sub">Lyon, France</div>
+        </div>
+        <div class="route-line"><div class="plane-anim">✈️</div></div>
+        <div class="route-city">
+          <div class="route-flag">🏝️</div>
+          <div class="route-name">L'Éperon</div>
+          <div class="route-sub">Saint-Paul, RE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">✈️</div><div class="stat-num">~11h</div><div class="stat-label">En avion</div></div>
+      <div class="stat-card"><div class="stat-icon">⏰</div><div class="stat-num">+3h</div><div class="stat-label">Décalage</div></div>
+      <div class="stat-card"><div class="stat-icon">🌡️</div><div class="stat-num" id="live-diff">~19°</div><div class="stat-label">Écart temp.</div></div>
+      <div class="stat-card"><div class="stat-icon">🌊</div><div class="stat-num">750k</div><div class="stat-label">Habitants RE</div></div>
+    </div>
+
+    <div class="section-label">L'Éperon — Saint-Paul</div>
+    <div class="card card-re" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+      <div style="font-size:1.6rem">🌴</div>
+      <div><div style="font-weight:800;margin-bottom:3px;font-size:.9rem">Dans les hauts de Saint-Paul</div><div style="font-size:.78rem;color:var(--muted);line-height:1.5">Vue imprenable sur le lagon classé UNESCO et l'océan Indien depuis les hauteurs.</div></div>
+    </div>
+    <div class="card card-re" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+      <div style="font-size:1.6rem">🌋</div>
+      <div><div style="font-weight:800;margin-bottom:3px;font-size:.9rem">Piton de la Fournaise</div><div style="font-size:.78rem;color:var(--muted);line-height:1.5">L'un des volcans les plus actifs du monde. Éruptions quasi annuelles visibles depuis les hauts.</div></div>
+    </div>
+    <div class="card card-re" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+      <div style="font-size:1.6rem">🐋</div>
+      <div><div style="font-weight:800;margin-bottom:3px;font-size:.9rem">Baleines à bosse</div><div style="font-size:.78rem;color:var(--muted);line-height:1.5">De juillet à octobre, les baleines à bosse migrent près des côtes de La Réunion pour mettre bas.</div></div>
+    </div>
+    <div class="card card-re" style="display:flex;gap:12px;align-items:flex-start">
+      <div style="font-size:1.6rem">🍛</div>
+      <div><div style="font-weight:800;margin-bottom:3px;font-size:.9rem">Cuisine créole</div><div style="font-size:.78rem;color:var(--muted);line-height:1.5">Carry, rougail saucisse, samossas… une cuisine métissée malgache, indienne, chinoise et française.</div></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<nav class="tab-bar">
+  <button class="tab active" onclick="switchTab('diff',this)">
+    <span class="tab-icon">🌍</span>Différences
   </button>
-  <button class="nav-item" id="nav-gallery" onclick="switchTab('gallery',this)">
-    <span class="nav-icon">🗂️</span><span class="nav-label">Galerie</span>
+  <button class="tab" onclick="switchTab('meteo',this)">
+    <span class="tab-icon">🌤️</span>Météo
   </button>
-  <button class="nav-add" onclick="switchTab('upload',document.getElementById('nav-upload'))">
-    <div class="nav-add-btn">📸</div>
-    <span class="nav-add-label">Capturer</span>
+  <button class="tab" onclick="switchTab('news',this)">
+    <span class="tab-icon">📰</span>Actus
   </button>
-  <button class="nav-item" id="nav-lb" onclick="switchTab('lb',this)">
-    <span class="nav-icon">🏆</span><span class="nav-label">Scores</span>
+  <button class="tab" onclick="switchTab('quiz',this)">
+    <span class="tab-icon">🎯</span>Quiz
   </button>
-  <button class="nav-item" id="nav-config" onclick="switchTab('config',this)">
-    <span class="nav-icon">⚙️</span><span class="nav-label">Config</span>
+  <button class="tab" onclick="switchTab('dist',this)">
+    <span class="tab-icon">✈️</span>Distance
   </button>
-  <button class="nav-item" id="nav-upload" style="display:none"></button>
 </nav>
 
-<script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+<script>
+// ═══ CLOCKS ═══
+function fmt(d,tz){return new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:tz}).format(d);}
+function fmtDate(d,tz){return new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',timeZone:tz}).format(d);}
+function updateClocks(){
+  const now=new Date();
+  document.getElementById('clk-fr').textContent=fmt(now,'Europe/Paris');
+  document.getElementById('clk-re').textContent=fmt(now,'Indian/Reunion');
+  document.getElementById('dat-fr').textContent=fmtDate(now,'Europe/Paris');
+  document.getElementById('dat-re').textContent=fmtDate(now,'Indian/Reunion');
+  document.getElementById('d-clk-fr').textContent=fmt(now,'Europe/Paris').slice(0,5);
+  document.getElementById('d-clk-re').textContent=fmt(now,'Indian/Reunion').slice(0,5);
+}
+updateClocks(); setInterval(updateClocks,1000);
 
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCaqZGo3rnOTmlaDpKRPR702fn5wVGIqNk",
-    authDomain: "animodex-bfea4.firebaseapp.com",
-    projectId: "animodex-bfea4",
-    storageBucket: "animodex-bfea4.firebasestorage.app",
-    messagingSenderId: "360553905455",
-    appId: "1:360553905455:web:bb461414e6ad6150c0b5da"
-  };
+// ═══ TABS ═══
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(tab==='news' && !newsLoaded){ newsLoaded=true; loadNews(); }
+}
 
-  let db = null, allEntries = [], selectedFile = null;
-  const TOTAL = 8700000;
+// ═══ TOAST ═══
+function toast(msg,type='ok'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;t.textContent=msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
 
-  const ANIMAL_EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷️","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐈","🐓","🦃","🦤","🦚","🦜","🦢","🦩","🕊️","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🐁","🐀","🐿️","🦔"];
+// ═══ WEATHER ═══
+const WC={
+  0:['☀️','Dégagé'],1:['🌤️','Peu nuageux'],2:['⛅','Partiellement nuageux'],
+  3:['☁️','Couvert'],45:['🌫️','Brouillard'],48:['🌫️','Brouillard givrant'],
+  51:['🌦️','Bruine'],53:['🌦️','Bruine mod.'],55:['🌧️','Bruine dense'],
+  61:['🌧️','Pluie légère'],63:['🌧️','Pluie'],65:['🌧️','Pluie forte'],
+  71:['🌨️','Neige légère'],73:['🌨️','Neige'],75:['❄️','Neige forte'],
+  80:['🌦️','Averses'],81:['🌧️','Averses mod.'],82:['⛈️','Averses fortes'],
+  95:['⛈️','Orage'],96:['⛈️','Orage+grêle'],99:['⛈️','Orage violent'],
+};
+function getW(code){
+  code=parseInt(code);if(WC[code])return WC[code];
+  const keys=Object.keys(WC).map(Number).sort((a,b)=>a-b);
+  let best=keys[0];for(let k of keys){if(k<=code)best=k;}
+  return WC[best]||['🌡️','Variable'];
+}
+function getOutfit(t){
+  if(t<5)return'🧥 Manteau';if(t<12)return'🧣 Veste+écharpe';
+  if(t<18)return'🧥 Veste';if(t<24)return'👕 T-shirt';return'🩳 Short ☀️';
+}
+const wd={fr:null,re:null};
+async function loadWeather(){
+  const uFR='https://api.open-meteo.com/v1/forecast?latitude=45.7085&longitude=4.8078&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&timezone=Europe%2FParis';
+  const uRE='https://api.open-meteo.com/v1/forecast?latitude=-21.0833&longitude=55.2167&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&timezone=Indian%2FReunion';
+  try{
+    const[rF,rR]=await Promise.all([fetch(uFR),fetch(uRE)]);
+    const[dF,dR]=await Promise.all([rF.json(),rR.json()]);
+    wd.fr={temp:Math.round(dF.current.temperature_2m),code:dF.current.weathercode,wind:Math.round(dF.current.windspeed_10m),hum:dF.current.relativehumidity_2m};
+    wd.re={temp:Math.round(dR.current.temperature_2m),code:dR.current.weathercode,wind:Math.round(dR.current.windspeed_10m),hum:dR.current.relativehumidity_2m};
+    applyWeather();toast('🌤️ Météo chargée !','ok');
+  }catch(e){toast('⚠️ Météo indisponible','err');}
+}
+function applyWeather(){
+  const fr=wd.fr,re=wd.re;if(!fr||!re)return;
+  const[iFR,dFR]=getW(fr.code);const[iRE,dRE]=getW(re.code);
+  // Header clocks
+  document.getElementById('wi-fr').textContent=iFR;
+  document.getElementById('wt-fr').textContent=fr.temp+'°';
+  document.getElementById('wl-fr').textContent=dFR;
+  document.getElementById('wi-re').textContent=iRE;
+  document.getElementById('wt-re').textContent=re.temp+'°';
+  document.getElementById('wl-re').textContent=dRE;
+  // Panel diff
+  document.getElementById('d-wx-fr').innerHTML=`<div class="diff-card-icon">${iFR}</div><div class="diff-card-label">Météo Oullins</div><div class="diff-card-value">${fr.temp}°C</div><div class="diff-card-sub">${dFR} · 💨${fr.wind}km/h</div><div class="diff-card-deco">🏙️</div>`;
+  document.getElementById('d-wx-re').innerHTML=`<div class="diff-card-icon">${iRE}</div><div class="diff-card-label">Météo L'Éperon</div><div class="diff-card-value">${re.temp}°C</div><div class="diff-card-sub">${dRE} · 💨${re.wind}km/h</div><div class="diff-card-deco">🌊</div>`;
+  // Panel meteo
+  document.getElementById('m-icon-fr').textContent=iFR;document.getElementById('m-temp-fr').textContent=fr.temp+'°C';document.getElementById('m-desc-fr').textContent=dFR;document.getElementById('m-hum-fr').textContent=`💧${fr.hum}%`;document.getElementById('m-wind-fr').textContent=`💨${fr.wind}km/h`;
+  document.getElementById('m-icon-re').textContent=iRE;document.getElementById('m-temp-re').textContent=re.temp+'°C';document.getElementById('m-desc-re').textContent=dRE;document.getElementById('m-hum-re').textContent=`💧${re.hum}%`;document.getElementById('m-wind-re').textContent=`💨${re.wind}km/h`;
+  // Compare
+  document.getElementById('c-temp-fr').textContent=fr.temp+'°C';document.getElementById('c-temp-re').textContent=re.temp+'°C';
+  document.getElementById('c-hum-fr').textContent=fr.hum+'%';document.getElementById('c-hum-re').textContent=re.hum+'%';
+  document.getElementById('c-wind-fr').textContent=fr.wind+'km/h';document.getElementById('c-wind-re').textContent=re.wind+'km/h';
+  document.getElementById('c-outfit-fr').textContent=getOutfit(fr.temp);document.getElementById('c-outfit-re').textContent=getOutfit(re.temp);
+  const diff=Math.abs(re.temp-fr.temp);
+  document.getElementById('c-diff').textContent=`${diff}°C d'écart`;
+  document.getElementById('live-diff').textContent=`${diff>0?'+':''}${diff}°`;
+}
+loadWeather();setInterval(loadWeather,10*60*1000);
 
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('cfg-warn').style.display = 'none';
-    renderEmojiPicker();
-    tryInitFirebase();
+// ═══ FACTS ═══
+const facts=[
+  {text:"La Réunion est 5× plus petite que la Corse mais abrite un volcan actif, des plages tropicales, des forêts nuageuses et des cirques classés UNESCO.",deco:"🌋"},
+  {text:"Le cirque de Mafate est l'un des seuls endroits habités totalement inaccessibles en voiture — uniquement à pied ou en hélicoptère.",deco:"🚁"},
+  {text:"De juillet à octobre, des baleines à bosse migrent près des côtes réunionnaises pour mettre bas. On peut les voir depuis le bord !",deco:"🐋"},
+  {text:"Le Piton des Neiges (3 070 m) est le plus haut sommet de l'Océan Indien — plus haut que tous les sommets de France métro sauf le Mont-Blanc.",deco:"🏔️"},
+  {text:"À La Réunion, il existe autant de recettes de carry que de familles. Chacun a SA version secrète, transmise de génération en génération.",deco:"🍛"},
+  {text:"L'Éperon est dans les hauts de Saint-Paul, côté 'sous le vent' — la côte ouest la plus ensoleillée et la plus douce de l'île.",deco:"🌴"},
+  {text:"Entre novembre et avril, des cyclones tropicaux peuvent frapper La Réunion avec des vents dépassant 300 km/h. La vie s'arrête complètement.",deco:"🌀"},
+  {text:"La Réunion compte plus de 900 espèces végétales endémiques. Le lagon est classé Patrimoine Mondial UNESCO depuis 2010.",deco:"🌊"},
+];
+let fi=0;
+function nextFact(){
+  const f=facts[fi%facts.length];
+  document.getElementById('fact-text').textContent=f.text;
+  document.getElementById('fact-deco').textContent=f.deco;fi++;
+  document.getElementById('fact-liked').textContent='♡ J\'adore';
+  document.getElementById('fact-liked').style.background='rgba(255,255,255,0.2)';
+}
+function likeFact(){
+  document.getElementById('fact-liked').textContent='❤️ Adoré !';
+  document.getElementById('fact-liked').style.background='rgba(255,100,100,0.35)';
+  toast('❤️ Anecdote adorée !','info');
+}
+nextFact();
+
+// ═══ QUIZ ═══
+const questions=[
+  {cat:'Géographie',theme:'ocean',deco:'🌊',q:"Superficie de La Réunion ?",opts:["2 512 km²","4 200 km²","1 800 km²","3 100 km²"],ans:0},
+  {cat:'Gastronomie',theme:'volcano',deco:'🍛',q:"Plat emblématique de La Réunion ?",opts:["Rougail saucisse","Bouillabaisse","Cassoulet","Poulet rôti"],ans:0},
+  {cat:'Nature',theme:'jungle',deco:'🏔️',q:"Plus haut sommet de l'Océan Indien ?",opts:["Piton des Neiges","Piton de la Fournaise","Mont Bellecombe","Grand Bénare"],ans:0},
+  {cat:'Faune',theme:'ocean',deco:'🐋',q:"Quand observe-t-on les baleines à bosse à La Réunion ?",opts:["Juil–Oct","Déc–Fév","Mars–Juin","Nov seulement"],ans:0},
+  {cat:'Culture',theme:'culture',deco:'🎵',q:"Le maloya est au patrimoine UNESCO depuis…",opts:["2009","1990","2015","2001"],ans:0},
+  {cat:'Géographie',theme:'ocean',deco:'📍',q:"Dans quel océan se trouve La Réunion ?",opts:["Océan Indien","Atlantique","Pacifique","Méditerranée"],ans:0},
+  {cat:'Histoire',theme:'culture',deco:'📜',q:"Depuis quand La Réunion est-elle département français ?",opts:["1946","1960","1848","1789"],ans:0},
+  {cat:'Faune',theme:'ocean',deco:'🦈',q:"Quel requin est particulièrement dangereux à La Réunion ?",opts:["Requin bouledogue","Requin blanc","Orque","Marlin"],ans:0},
+  {cat:'Géographie',theme:'jungle',deco:'🚁',q:"Les 3 cirques de La Réunion sont…",opts:["Cilaos, Mafate, Salazie","Cilaos, Bellecombe, Mafate","Salazie, Piton, Mafate","Cilaos, Bébour, Salazie"],ans:0},
+  {cat:'Décalage',theme:'ocean',deco:'⏰',q:"Décalage Oullins–La Réunion en hiver ?",opts:["+3 heures","+2 heures","+4 heures","+1 heure"],ans:0},
+  {cat:'Gastronomie',theme:'volcano',deco:'🌶️',q:"Qu'est-ce que le 'rougail' ?",opts:["Un condiment épicé","Un dessert","Une boisson","Une viande"],ans:0},
+  {cat:'Nature',theme:'jungle',deco:'🌊',q:"Le lagon classé UNESCO depuis…",opts:["2010","2000","1995","2018"],ans:0},
+  {cat:'Culture',theme:'culture',deco:'🗣️',q:"Créole parlé à La Réunion ?",opts:["Créole réunionnais","Créole haïtien","Créole guadeloupéen","Créole mauricien"],ans:0},
+  {cat:'Histoire',theme:'culture',deco:'⚓',q:"Ancien nom de La Réunion ?",opts:["Île Bourbon","Île de France","Île Rodrigues","Île Maurice"],ans:0},
+  {cat:'Géographie',theme:'ocean',deco:'🗺️',q:"L'Éperon est dans quelle commune ?",opts:["Saint-Paul","Saint-Denis","Saint-Pierre","Le Port"],ans:0},
+];
+let qIdx=0,qAnswered=false,curP='fr';
+const scores={fr:0,re:0};
+function loadQ(){
+  qAnswered=false;if(qIdx>=questions.length){endQuiz();return;}
+  const q=questions[qIdx];
+  document.getElementById('q-card').className=`quiz-q-card ${q.theme}`;
+  document.getElementById('q-cat').textContent=q.cat;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-deco').textContent=q.deco;
+  document.getElementById('q-turn').textContent=`Tour : ${curP==='fr'?'🇫🇷 Oullins':'🏝️ L\'Éperon'}`;
+  document.getElementById('q-num').textContent=qIdx+1;
+  const el=document.getElementById('q-opts');el.innerHTML='';
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';btn.textContent=opt;
+    btn.onclick=()=>answerQ(i,q.ans);el.appendChild(btn);
   });
+}
+function answerQ(chosen,correct){
+  if(qAnswered)return;qAnswered=true;
+  const btns=document.querySelectorAll('.opt');
+  if(chosen===correct){btns[chosen].classList.add('correct');scores[curP]++;document.getElementById(`sc-${curP}`).textContent=scores[curP];toast(curP==='fr'?'🇫🇷 Bonne réponse !':'🏝️ Bonne réponse !','ok');}
+  else{btns[chosen].classList.add('wrong');btns[correct].classList.add('correct');toast('❌ Raté !','info');}
+  btns.forEach(b=>b.disabled=true);
+  curP=curP==='fr'?'re':'fr';qIdx++;
+  setTimeout(loadQ,1800);
+}
+function skipQ(){curP=curP==='fr'?'re':'fr';qIdx++;loadQ();}
+function endQuiz(){
+  document.getElementById('q-card').className='quiz-q-card jungle';
+  const w=scores.fr>scores.re?'🇫🇷 Oullins gagne !':scores.re>scores.fr?'🏝️ L\'Éperon gagne !':'🤝 Égalité !';
+  document.getElementById('q-cat').textContent='Résultat';
+  document.getElementById('q-text').textContent=w;
+  document.getElementById('q-deco').textContent='🏆';
+  document.getElementById('q-turn').textContent=`${scores.fr} - ${scores.re}`;
+  document.getElementById('q-opts').innerHTML=`<button class="btn btn-leaf" onclick="resetQuiz()" style="width:100%;justify-content:center;margin-top:8px">Rejouer 🔄</button>`;
+}
+function resetQuiz(){qIdx=0;curP='fr';scores.fr=0;scores.re=0;document.getElementById('sc-fr').textContent='0';document.getElementById('sc-re').textContent='0';loadQ();}
+loadQ();
 
-  function renderEmojiPicker() {
-    const picker = document.getElementById('emoji-picker');
-    picker.innerHTML = ANIMAL_EMOJIS.map(e =>
-      `<span class="emoji-opt" onclick="selectEmoji('${e}')">${e}</span>`
-    ).join('');
+// ═══ NEWS — RSS en direct via allorigins.win ═══
+// Sources : Zinfos974 + Imaz Press (journaux locaux réunionnais)
+// Proxy : allorigins.win (open source, stable, CORS-friendly)
+
+const RSS_SOURCES = [
+  { name:'Zinfos974',  color:'#e63946', url:'https://www.zinfos974.com/feed/' },
+  { name:'Imaz Press', color:'#0096c7', url:'https://www.imazpress.com/feed'  },
+];
+
+// Fallback si les flux sont indisponibles (articles récents réels)
+const FALLBACK = [
+  {title:'Zinfos974 — Actualités de La Réunion',summary:'Toute l\'actualité de l\'île en direct. Cliquez pour lire.',link:'https://www.zinfos974.com',cat:'general',emoji:'📰',source:'Zinfos974',sourceColor:'#e63946',date:new Date().toISOString()},
+  {title:'Imaz Press — L\'actualité réunionnaise',summary:'L\'agence de presse locale. Politique, société, faits divers.',link:'https://www.imazpress.com',cat:'general',emoji:'📰',source:'Imaz Press',sourceColor:'#0096c7',date:new Date().toISOString()},
+  {title:'Météo France Réunion — Vigilances en cours',summary:'Consultez les alertes météo officielles pour La Réunion.',link:'https://meteofrance.re',cat:'alerte',emoji:'⚠️',source:'Météo France',sourceColor:'#f4a261',date:new Date().toISOString()},
+  {title:'OVPF — Observatoire volcanologique du Piton de la Fournaise',summary:'Suivez l\'activité volcanique en temps réel.',link:'https://www.ipgp.fr/fr/ovpf/actualites-ovpf',cat:'eruption',emoji:'🌋',source:'OVPF',sourceColor:'#d62828',date:new Date().toISOString()},
+];
+
+let allArticles = [];
+let currentCat = 'all';
+let newsLoading = false;
+let newsLoaded = false;
+
+function categorize(text) {
+  const t = text.toLowerCase();
+  if (/éruption|lave|volcan|fournaise|sismique|trémor/.test(t))       return {cat:'eruption', emoji:'🌋'};
+  if (/baleine|requin|dauphin|tortue|lagon|mer|océan|pêche|corail/.test(t)) return {cat:'ocean',    emoji:'🌊'};
+  if (/cyclone|tempête|alerte|vigilance|inondation|vent|crue/.test(t)) return {cat:'alerte',   emoji:'⚠️'};
+  if (/maloya|festival|musique|culture|patrimoine|art|spectacle/.test(t)) return {cat:'culture', emoji:'🎵'};
+  if (/nature|forêt|endémique|faune|flore|cirque|randonnée/.test(t))   return {cat:'nature',   emoji:'🌿'};
+  return {cat:'general', emoji:'📰'};
+}
+
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const m = Math.floor((Date.now() - d) / 60000);
+  if (m < 1)    return 'À l\'instant';
+  if (m < 60)   return `Il y a ${m} min`;
+  if (m < 1440) return `Il y a ${Math.floor(m/60)}h`;
+  return `Il y a ${Math.floor(m/1440)}j`;
+}
+
+function stripHtml(html) {
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  const t = d.textContent.replace(/\s+/g,' ').trim();
+  return t.length > 180 ? t.slice(0,180)+'…' : t;
+}
+
+// Fetch avec timeout strict
+function fetchWithTimeout(url, ms=8000) {
+  return Promise.race([
+    fetch(url),
+    new Promise((_,r) => setTimeout(() => r(new Error('timeout')), ms))
+  ]);
+}
+
+async function fetchOneRSS(source) {
+  // allorigins renvoie le XML encodé en JSON
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`;
+  const res = await fetchWithTimeout(proxy, 8000);
+  const json = await res.json();
+  // Parse XML
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(json.contents, 'text/xml');
+  const items = xml.querySelectorAll('item');
+  const arts = [];
+  items.forEach(item => {
+    const title   = item.querySelector('title')?.textContent || '';
+    const desc    = item.querySelector('description')?.textContent || '';
+    const link    = item.querySelector('link')?.textContent || source.url;
+    const pubDate = item.querySelector('pubDate')?.textContent || '';
+    const {cat, emoji} = categorize(title + ' ' + desc);
+    arts.push({ title, summary: stripHtml(desc), link, date: pubDate, cat, emoji, source: source.name, sourceColor: source.color });
+  });
+  return arts;
+}
+
+async function loadNews() {
+  if (newsLoading) return;
+  newsLoading = true;
+
+  const feed = document.getElementById('news-feed');
+  feed.innerHTML = `
+    <div class="card" style="text-align:center;padding:36px;color:var(--muted)">
+      <div style="font-size:2.2rem;margin-bottom:10px">🌴</div>
+      <div style="font-weight:800;font-size:.95rem">Chargement des actus…</div>
+      <div style="font-size:.72rem;margin-top:6px">Zinfos974 & Imaz Press Réunion</div>
+    </div>`;
+
+  const results = await Promise.allSettled(RSS_SOURCES.map(fetchOneRSS));
+  allArticles = [];
+  results.forEach(r => { if (r.status==='fulfilled') allArticles.push(...r.value); });
+  allArticles.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  const now = new Date();
+  document.getElementById('news-time').textContent =
+    `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  if (allArticles.length === 0) {
+    // Fallback : liens directs vers les journaux
+    allArticles = FALLBACK;
+    toast('🌴 Flux indisponible — liens directs affichés','info');
+  } else {
+    toast(`📰 ${allArticles.length} articles chargés !`, 'ok');
   }
 
-  window.selectEmoji = function(e) {
-    document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
-    event.target.classList.add('selected');
-    document.getElementById('selected-emoji').textContent = e;
-    document.getElementById('emoji-hidden').value = e;
-  };
+  newsLoading = false;
+  renderNews(currentCat);
+}
 
-  function tryInitFirebase() {
-    try {
-      const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-      db = getFirestore(app);
-      loadEntries();
-    } catch(e) { console.error('Firebase init:', e); }
+function filterNews(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.news-filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  if (!newsLoaded) { newsLoaded = true; loadNews(); return; }
+  renderNews(cat);
+}
+
+function renderNews(cat) {
+  const feed = document.getElementById('news-feed');
+  const filtered = cat==='all' ? allArticles : allArticles.filter(n => n.cat===cat);
+
+  if (filtered.length === 0) {
+    feed.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);padding:30px;font-weight:700">Aucun article dans cette catégorie</div>`;
+    return;
   }
 
-  window.saveFbConfig = function() { showToast('Config déjà intégrée ✓'); };
-  window.saveGeminiKey = function() { showToast('Clé déjà intégrée ✓'); };
-
-  function updateCfgStatus() {
-    document.getElementById('cfg-status-lines').innerHTML =
-      '<div class="status-line">✅ Firebase intégré</div>' +
-      '<div class="status-line" style="color:var(--green);font-weight:700">🟢 Tout est prêt !</div>';
-  }
-
-  window.handleFile = function(file) {
-    if (!file) return;
-    selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.getElementById('preview-photo');
-      img.src = e.target.result; img.style.display = 'block';
-      document.getElementById('cam-placeholder').style.display = 'none';
-      document.getElementById('camera-zone').classList.add('has-image');
-    };
-    reader.readAsDataURL(file);
-    checkFormReady();
-  };
-
-  window.checkFormReady = function() {
-    const author = document.getElementById('author-input').value.trim();
-    const animal = document.getElementById('animal-input').value.trim();
-    const ok = author && animal && selectedFile;
-    document.getElementById('submit-btn').disabled = !ok;
-  };
-
-  async function uploadPhoto(file) {
-    const fd = new FormData(); fd.append('image', file);
-    const r = await fetch('https://api.imgur.com/3/image', { method:'POST', headers:{Authorization:'Client-ID 546c25a59c58ad7'}, body:fd });
-    const d = await r.json();
-    if (!d.success) throw new Error('Imgur error');
-    return d.data.link;
-  }
-
-  window.submitEntry = async function() {
-    if (!db || !selectedFile) return;
-    const author = document.getElementById('author-input').value.trim() || 'Anonyme';
-    const animal = document.getElementById('animal-input').value.trim();
-    const lieu = document.getElementById('lieu-input').value.trim();
-    const emoji = document.getElementById('emoji-hidden').value || '🐾';
-    const note = document.getElementById('note-input').value.trim();
-
-    document.getElementById('submit-btn').disabled = true;
-    try {
-      showStatus('loading', 'Upload de la photo...');
-      let photoUrl = '';
-      try { photoUrl = await uploadPhoto(selectedFile); }
-      catch { photoUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(selectedFile); }); }
-
-      showStatus('loading', 'Enregistrement...');
-      await addDoc(collection(db, 'entries'), {
-        author, animalName: animal, animalEmoji: emoji,
-        lieu: lieu || '', note: note || '',
-        animalScientific: '', animalDesc: note || '',
-        photoUrl, createdAt: Date.now()
-      });
-
-      showToast(`🎉 ${emoji} ${animal} capturé !`);
-      showStatus('success', 'Découverte enregistrée !');
-
-      selectedFile = null;
-      document.getElementById('preview-photo').style.display = 'none';
-      document.getElementById('preview-photo').src = '';
-      document.getElementById('cam-placeholder').style.display = 'block';
-      document.getElementById('camera-zone').classList.remove('has-image');
-      document.getElementById('file-input').value = '';
-      document.getElementById('animal-input').value = '';
-      document.getElementById('lieu-input').value = '';
-      document.getElementById('note-input').value = '';
-      document.getElementById('emoji-hidden').value = '';
-      document.getElementById('selected-emoji').textContent = '🐾';
-      document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
-      document.getElementById('submit-btn').disabled = true;
-
-      loadEntries();
-      setTimeout(() => switchTab('home', document.getElementById('nav-home')), 1200);
-    } catch(e) { showStatus('error', 'Erreur : ' + e.message); document.getElementById('submit-btn').disabled = false; }
-  };
-
-  window.loadEntries = async function() {
-    if (!db) return;
-    try {
-      const snap = await getDocs(query(collection(db, 'entries'), orderBy('createdAt', 'desc')));
-      allEntries = snap.docs.map(d => ({id:d.id,...d.data()}));
-      renderHome(); renderGallery(allEntries); renderLeaderboard(allEntries);
-    } catch(e) { console.error(e); }
-  };
-
-  function renderHome() {
-    const unique = new Set(allEntries.map(e => e.animalName?.toLowerCase())).size;
-    const players = new Set(allEntries.map(e => e.author)).size;
-    document.getElementById('hero-num').textContent = unique.toLocaleString('fr');
-    document.getElementById('topbar-count').textContent = unique;
-    document.getElementById('stat-photos').textContent = allEntries.length;
-    document.getElementById('stat-players').textContent = players;
-    document.getElementById('stat-species').textContent = unique;
-    document.getElementById('progress-glow').style.width = Math.max((unique/TOTAL)*100, 0.004) + '%';
-    const recent = allEntries.slice(0, 10);
-    if (!recent.length) return;
-    document.getElementById('recent-scroll').innerHTML = recent.map((e, i) => `
-      <div class="recent-card" onclick="openModal(${i})" style="animation-delay:${i*0.05}s">
-        <div class="recent-img">${e.photoUrl ? `<img src="${e.photoUrl}" alt="${e.animalName}" loading="lazy" />` : e.animalEmoji||'🐾'}</div>
-        <div class="recent-info"><div class="recent-animal">${e.animalEmoji||''} ${e.animalName}</div><div class="recent-author">${e.author}${e.lieu ? ' · '+e.lieu : ''}</div></div>
-      </div>`).join('');
-  }
-
-  window.filterBy = function(author, chip) {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    renderGallery(author ? allEntries.filter(e => e.author === author) : allEntries);
-  };
-
-  function renderGallery(entries) {
-    const authors = [...new Set(allEntries.map(e => e.author))];
-    document.getElementById('filter-scroll').innerHTML =
-      `<div class="chip active" onclick="filterBy(null,this)">Tous</div>` +
-      authors.map(a => `<div class="chip" onclick="filterBy('${a}',this)">${a}</div>`).join('');
-    if (!entries.length) {
-      document.getElementById('gallery-grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-big">🦕</div><div class="empty-title">Aucune découverte</div></div>`;
-      return;
-    }
-    document.getElementById('gallery-grid').innerHTML = entries.map((e, i) => `
-      <div class="g-card" style="animation-delay:${i*0.04}s" onclick="openModal(${allEntries.indexOf(e)})">
-        ${e.photoUrl ? `<img class="g-img" src="${e.photoUrl}" alt="${e.animalName}" loading="lazy" />` : `<div class="g-img-placeholder">${e.animalEmoji||'🐾'}</div>`}
-        <div class="g-body">
-          <div class="g-name">${e.animalEmoji||''} ${e.animalName}</div>
-          <div class="g-author">par ${e.author}${e.lieu ? ' · '+e.lieu : ''}</div>
+  feed.innerHTML = '';
+  filtered.slice(0, 20).forEach(n => {
+    const div = document.createElement('div');
+    div.className = `news-item ${n.cat}`;
+    div.style.cursor = 'pointer';
+    div.onclick = () => window.open(n.link, '_blank');
+    div.innerHTML = `
+      <div class="news-body">
+        <div class="news-cat-row">
+          <span class="news-emoji">${n.emoji}</span>
+          <span class="news-cat-badge">${catLabel(n.cat)}</span>
+          <span style="margin-left:auto;font-size:.58rem;font-weight:800;color:${n.sourceColor};background:${n.sourceColor}22;padding:2px 8px;border-radius:8px;flex-shrink:0">${n.source}</span>
         </div>
-      </div>`).join('');
-  }
+        <div class="news-title">${n.title}</div>
+        <div class="news-summary">${n.summary}</div>
+        <div style="font-size:.62rem;color:var(--muted);margin-top:7px;display:flex;align-items:center;gap:6px">
+          <span>${timeAgo(n.date)}</span>
+          <span style="color:#ddd">·</span>
+          <span style="color:var(--ocean);font-weight:700">Lire l'article →</span>
+        </div>
+      </div>`;
+    feed.appendChild(div);
+  });
+}
 
-  window.openModal = function(i) {
-    const e = allEntries[i];
-    const photo = document.getElementById('modal-photo');
-    photo.src = e.photoUrl||''; photo.style.display = e.photoUrl ? 'block' : 'none';
-    const nameEl = document.getElementById('modal-name'); nameEl.textContent = `${e.animalEmoji||'🐾'} ${e.animalName}`; nameEl.dataset.idx = i;
-    document.getElementById('modal-sci').textContent = e.lieu ? '📍 ' + e.lieu : '';
-    document.getElementById('modal-desc').textContent = e.note || e.animalDesc || '';
-    document.getElementById('modal-tags').innerHTML =
-      `<span class="modal-tag">👤 ${e.author}</span>` +
-      `<span class="modal-tag">📅 ${new Date(e.createdAt).toLocaleDateString('fr')}</span>` +
-      (e.lieu ? `<span class="modal-tag">📍 ${e.lieu}</span>` : '');
-    document.getElementById('modal').classList.add('open');
-  };
+function catLabel(cat) {
+  return {eruption:'🌋 Éruption',ocean:'🌊 Océan',nature:'🌿 Nature',alerte:'⚠️ Alerte',culture:'🎵 Culture',general:'📰 Info'}[cat]||'📰';
+}
 
-  window.closeModal = function() { document.getElementById('modal').classList.remove('open'); };
 
-  window.deleteEntry = async function() {
-    if (!confirm('Supprimer cette entrée ?')) return;
-    const i = parseInt(document.getElementById('modal-name').dataset.idx);
-    const entry = allEntries[i];
-    if (!entry) return;
-    try {
-      const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      await deleteDoc(doc(db, 'entries', entry.id));
-      closeModal();
-      showToast('Entrée supprimée');
-      loadEntries();
-    } catch(e) { alert('Erreur : ' + e.message); }
-  };
-
-  function renderLeaderboard(entries) {
-    const scores = {}, lastAnimals = {};
-    entries.forEach(e => {
-      if (!scores[e.author]) { scores[e.author] = new Set(); lastAnimals[e.author] = []; }
-      scores[e.author].add(e.animalName?.toLowerCase());
-      lastAnimals[e.author].push(e.animalEmoji||'');
-    });
-    const sorted = Object.entries(scores).map(([name, set]) => ({name, count:set.size, emojis:[...new Set(lastAnimals[name])].slice(0,5)})).sort((a,b) => b.count-a.count);
-    if (!sorted.length) {
-      document.getElementById('podium-wrap').innerHTML = '';
-      document.getElementById('lb-list').innerHTML = `<div class="empty"><div class="empty-big">🏅</div><div class="empty-title">Classement vide</div><div class="empty-sub">Capturez des animaux !</div></div>`;
-      return;
-    }
-    const top3 = sorted.slice(0,3);
-    const order = top3.length>=3?[top3[1],top3[0],top3[2]]:top3.length===2?[top3[1],top3[0]]:[top3[0]];
-    const classes = top3.length>=3?['second','first','third']:top3.length===2?['second','first']:['first'];
-    document.getElementById('podium-wrap').innerHTML = `<div class="podium">${order.map((p,i) => `<div class="podium-item ${classes[i]}"><div class="podium-avatar">${p.name.slice(0,2).toUpperCase()}</div><div class="podium-name">${p.name}</div><div class="podium-score">${p.count}</div><div class="podium-bar"></div></div>`).join('')}</div>`;
-    document.getElementById('lb-list').innerHTML = sorted.map((p,i) => `
-      <div class="lb-item" style="animation-delay:${i*0.06}s">
-        <div class="lb-rank-num">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
-        <div class="lb-av">${p.name.slice(0,2).toUpperCase()}</div>
-        <div style="flex:1"><div class="lb-iname">${p.name}</div><div class="lb-isub">${p.emojis.join(' ')}</div></div>
-        <div><div class="lb-iscore">${p.count}</div><div class="lb-iscore-label">espèces</div></div>
-      </div>`).join('');
-  }
-
-  window.switchTab = function(tab, el) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    if (el) el.classList.add('active');
-    if (['gallery','home','lb'].includes(tab)) loadEntries();
-    if (tab === 'config') updateCfgStatus();
-    window.scrollTo(0,0);
-  };
-
-  function showStatus(type, msg) {
-    const pill = document.getElementById('status-pill');
-    pill.className = `status-pill visible ${type}`;
-    document.getElementById('status-spin').style.display = type==='loading' ? 'block' : 'none';
-    document.getElementById('status-msg').textContent = msg;
-  }
-
-  window.showToast = function(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  };
 </script>
 </body>
 </html>
