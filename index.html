@@ -216,6 +216,25 @@
     .emoji-opt { font-size:22px;cursor:pointer;padding:4px;border-radius:8px;transition:transform 0.15s,background 0.15s;line-height:1; }
     .emoji-opt:hover { background:rgba(255,255,255,0.1);transform:scale(1.2); }
     .emoji-opt.selected { background:rgba(79,255,176,0.2);transform:scale(1.15);outline:2px solid var(--green);border-radius:8px; }
+
+    .comments-section { margin-top:20px;border-top:1px solid var(--border);padding-top:16px; }
+    .comments-title { font-size:14px;font-weight:700;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px; }
+    .comment-item { display:flex;gap:10px;margin-bottom:12px;animation:fadeUp 0.3s ease; }
+    .comment-avatar { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;color:#fff; }
+    .comment-bubble { flex:1;background:var(--surface);border-radius:0 12px 12px 12px;padding:10px 12px; }
+    .comment-author { font-size:12px;font-weight:800;color:var(--green);margin-bottom:3px; }
+    .comment-text { font-size:13px;color:var(--text);line-height:1.4; }
+    .comment-time { font-size:10px;color:var(--muted);margin-top:4px; }
+    .comment-form { display:flex;gap:8px;margin-top:14px;align-items:center; }
+    .comment-name { width:90px;flex-shrink:0;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none; }
+    .comment-name:focus { border-color:var(--green); }
+    .comment-name::placeholder { color:var(--muted); }
+    .comment-field { flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none;resize:none; }
+    .comment-field:focus { border-color:var(--green); }
+    .comment-field::placeholder { color:var(--muted); }
+    .comment-send { width:36px;height:36px;border-radius:50%;background:var(--green);border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s; }
+    .comment-send:active { transform:scale(0.88); }
+    .no-comments { font-size:13px;color:var(--muted);text-align:center;padding:12px 0; }
   </style>
 </head>
 <body>
@@ -232,6 +251,15 @@
       <div class="modal-scientific" id="modal-sci"></div>
       <div class="modal-desc-text" id="modal-desc"></div>
       <div class="modal-tags" id="modal-tags"></div>
+      <div class="comments-section">
+        <div class="comments-title">💬 Commentaires <span id="comment-count"></span></div>
+        <div id="comments-list"></div>
+        <div class="comment-form">
+          <input class="comment-name" id="comment-author" placeholder="Prénom" />
+          <textarea class="comment-field" id="comment-text" placeholder="Écris un commentaire..." rows="1"></textarea>
+          <button class="comment-send" onclick="sendComment()">➤</button>
+        </div>
+      </div>
       <div style="text-align:center;margin-top:16px"><button onclick="deleteEntry()" style="padding:6px 14px;border-radius:999px;border:1px solid rgba(255,107,107,0.3);background:none;color:rgba(255,107,107,0.6);font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">🗑️ Supprimer</button></div>
     </div>
   </div>
@@ -411,7 +439,7 @@
 
 <script type="module">
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyCaqZGo3rnOTmlaDpKRPR702fn5wVGIqNk",
@@ -601,7 +629,12 @@
       `<span class="modal-tag">👤 ${e.author}</span>` +
       `<span class="modal-tag">📅 ${new Date(e.createdAt).toLocaleDateString('fr')}</span>` +
       (e.lieu ? `<span class="modal-tag">📍 ${e.lieu}</span>` : '');
+    currentEntryId = e.id;
+    document.getElementById('comments-list').innerHTML = '<div class="no-comments">Chargement...</div>';
+    document.getElementById('comment-count').textContent = '';
+    document.getElementById('comment-text').value = '';
     document.getElementById('modal').classList.add('open');
+    loadComments(e.id);
   };
 
   window.closeModal = function() { document.getElementById('modal').classList.remove('open'); };
@@ -612,13 +645,62 @@
     const entry = allEntries[i];
     if (!entry) return;
     try {
-      const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
       await deleteDoc(doc(db, 'entries', entry.id));
       closeModal();
       showToast('Entrée supprimée');
       loadEntries();
     } catch(e) { alert('Erreur : ' + e.message); }
   };
+
+  let currentEntryId = null;
+
+  window.sendComment = async function() {
+    const author = document.getElementById('comment-author').value.trim();
+    const text = document.getElementById('comment-text').value.trim();
+    if (!author || !text || !currentEntryId) return;
+    try {
+      await addDoc(collection(db, 'entries', currentEntryId, 'comments'), {
+        author, text, createdAt: Date.now()
+      });
+      document.getElementById('comment-text').value = '';
+      loadComments(currentEntryId);
+    } catch(e) { alert('Erreur : ' + e.message); }
+  };
+
+  async function loadComments(entryId) {
+    try {
+      const snap = await getDocs(query(collection(db, 'entries', entryId, 'comments'), orderBy('createdAt', 'asc')));
+      const comments = snap.docs.map(d => ({id:d.id,...d.data()}));
+      const list = document.getElementById('comments-list');
+      document.getElementById('comment-count').textContent = comments.length ? `(${comments.length})` : '';
+      if (!comments.length) {
+        list.innerHTML = '<div class="no-comments">Sois le premier à commenter !</div>';
+        return;
+      }
+      list.innerHTML = comments.map(c => {
+        const initials = c.author.slice(0,2).toUpperCase();
+        const time = timeAgo(c.createdAt);
+        return `<div class="comment-item">
+          <div class="comment-avatar">${initials}</div>
+          <div class="comment-bubble">
+            <div class="comment-author">${c.author}</div>
+            <div class="comment-text">${c.text}</div>
+            <div class="comment-time">${time}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) { console.error(e); }
+  }
+
+  function timeAgo(ts) {
+    const diff = Date.now() - ts;
+    const m = Math.floor(diff/60000);
+    if (m < 1) return "à l'instant";
+    if (m < 60) return `il y a ${m}min`;
+    const h = Math.floor(m/60);
+    if (h < 24) return `il y a ${h}h`;
+    return `il y a ${Math.floor(h/24)}j`;
+  }
 
   function renderLeaderboard(entries) {
     const scores = {}, lastAnimals = {};
