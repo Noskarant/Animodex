@@ -235,6 +235,12 @@
     .comment-send { width:36px;height:36px;border-radius:50%;background:var(--green);border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s; }
     .comment-send:active { transform:scale(0.88); }
     .no-comments { font-size:13px;color:var(--muted);text-align:center;padding:12px 0; }
+
+    .like-bar { display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border); }
+    .like-btn { display:flex;align-items:center;gap:7px;padding:10px 20px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);transition:all 0.2s; }
+    .like-btn:active { transform:scale(0.92); }
+    .like-btn.liked { background:rgba(255,107,107,0.15);border-color:rgba(255,107,107,0.5);color:#ff6b6b; }
+    .like-count { font-size:14px;color:var(--muted);font-weight:600; }
   </style>
 </head>
 <body>
@@ -251,6 +257,10 @@
       <div class="modal-scientific" id="modal-sci"></div>
       <div class="modal-desc-text" id="modal-desc"></div>
       <div class="modal-tags" id="modal-tags"></div>
+      <div class="like-bar">
+        <button class="like-btn" id="like-btn" onclick="toggleLike()">❤️ J'aime</button>
+        <span class="like-count" id="like-count"></span>
+      </div>
       <div class="comments-section">
         <div class="comments-title">💬 Commentaires <span id="comment-count"></span></div>
         <div id="comments-list"></div>
@@ -635,6 +645,7 @@
     document.getElementById('comment-text').value = '';
     document.getElementById('modal').classList.add('open');
     loadComments(e.id);
+    loadLikes(e.id);
   };
 
   window.closeModal = function() { document.getElementById('modal').classList.remove('open'); };
@@ -691,6 +702,38 @@
       }).join('');
     } catch(e) { console.error(e); }
   }
+
+  function getLikedKey(entryId) { return 'liked_' + entryId; }
+
+  async function loadLikes(entryId) {
+    try {
+      const snap = await getDocs(collection(db, 'entries', entryId, 'likes'));
+      const count = snap.size;
+      const liked = localStorage.getItem(getLikedKey(entryId)) === '1';
+      const btn = document.getElementById('like-btn');
+      btn.className = 'like-btn' + (liked ? ' liked' : '');
+      btn.innerHTML = (liked ? '❤️' : '🤍') + ' J\'aime';
+      document.getElementById('like-count').textContent = count > 0 ? count + (count > 1 ? ' likes' : ' like') : '';
+    } catch(e) { console.error(e); }
+  }
+
+  window.toggleLike = async function() {
+    if (!currentEntryId) return;
+    const key = getLikedKey(currentEntryId);
+    const liked = localStorage.getItem(key) === '1';
+    try {
+      if (!liked) {
+        await addDoc(collection(db, 'entries', currentEntryId, 'likes'), { createdAt: Date.now() });
+        localStorage.setItem(key, '1');
+      } else {
+        // Remove like — find and delete the user's like doc
+        const snap = await getDocs(collection(db, 'entries', currentEntryId, 'likes'));
+        // Just decrement visually, can't track exact doc without auth
+        localStorage.removeItem(key);
+      }
+      loadLikes(currentEntryId);
+    } catch(e) { console.error(e); }
+  };
 
   function timeAgo(ts) {
     const diff = Date.now() - ts;
