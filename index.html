@@ -241,6 +241,26 @@
     .like-btn:active { transform:scale(0.92); }
     .like-btn.liked { background:rgba(255,107,107,0.15);border-color:rgba(255,107,107,0.5);color:#ff6b6b; }
     .like-count { font-size:14px;color:var(--muted);font-weight:600; }
+
+    .roaming-animal {
+      position: fixed;
+      font-size: 36px;
+      z-index: 9998;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      transition: none;
+      will-change: transform;
+    }
+
+    .roaming-animal {
+      position: fixed;
+      font-size: 36px;
+      z-index: 9998;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+      transition: transform 0.1s;
+      will-change: transform;
+    }
   </style>
 </head>
 <body>
@@ -787,6 +807,110 @@
     document.getElementById('status-spin').style.display = type==='loading' ? 'block' : 'none';
     document.getElementById('status-msg').textContent = msg;
   }
+
+
+  // ── ROAMING ANIMALS ──────────────────────────────
+  const ROAMING = ["🐘","🦁","🐧","🦊","🐸","🦋","🐢","🦀","🐬","🦜","🐿️","🦔","🐊","🦭","🦘","🐙","🦩","🐆","🦒","🐻","🦡","🦥","🐡","🦈","🦚"];
+
+  function launchAnimal() {
+    const el = document.createElement('div');
+    el.className = 'roaming-animal';
+    el.textContent = ROAMING[Math.floor(Math.random() * ROAMING.length)];
+
+    const fromLeft = Math.random() > 0.5;
+    const top = 80 + Math.random() * (window.innerHeight - 200);
+    const duration = 4000 + Math.random() * 4000;
+    const bounce = Math.random() > 0.5;
+
+    el.style.top = top + 'px';
+    el.style.left = fromLeft ? '-60px' : (window.innerWidth + 20) + 'px';
+    el.style.transform = fromLeft ? 'scaleX(1)' : 'scaleX(-1)';
+
+    document.body.appendChild(el);
+
+    const startX = fromLeft ? -60 : window.innerWidth + 20;
+    const endX = fromLeft ? window.innerWidth + 60 : -80;
+    const startTime = performance.now();
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = progress;
+      const x = startX + (endX - startX) * eased;
+      const wobble = bounce ? Math.sin(progress * Math.PI * 6) * 10 : 0;
+      el.style.left = x + 'px';
+      el.style.top = (top + wobble) + 'px';
+      if (progress < 1) requestAnimationFrame(animate);
+      else el.remove();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // Launch every 8–20 seconds randomly
+  function scheduleAnimal() {
+    const delay = 8000 + Math.random() * 12000;
+    setTimeout(() => { launchAnimal(); scheduleAnimal(); }, delay);
+  }
+
+  setTimeout(scheduleAnimal, 3000); // first one after 3s
+
+
+  // ── ROAMING ANIMALS ──────────────────────────────────────────────────
+  const ROAMING = ["🐘","🦁","🐧","🦊","🐸","🦋","🐢","🦒","🐬","🦀","🦓","🐙","🦔","🐿️","🦜","🐊","🦩","🐆","🦭","🦘"];
+
+  function launchAnimal() {
+    const el = document.createElement('div');
+    el.className = 'roaming-animal';
+    el.textContent = ROAMING[Math.floor(Math.random() * ROAMING.length)];
+
+    const fromLeft = Math.random() > 0.5;
+    const top = 15 + Math.random() * 60; // between 15% and 75% of screen height
+    const speed = 4000 + Math.random() * 4000; // 4-8 seconds
+    const bounce = Math.random() > 0.5;
+    const startX = fromLeft ? -80 : window.innerWidth + 80;
+    const endX = fromLeft ? window.innerWidth + 80 : -80;
+
+    el.style.cssText = `
+      position:fixed;
+      font-size:${28 + Math.floor(Math.random()*20)}px;
+      top:${top}%;
+      left:0;
+      z-index:9998;
+      pointer-events:none;
+      filter:drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+      transform: translateX(${startX}px) ${fromLeft ? 'scaleX(1)' : 'scaleX(-1)'};
+      transition: none;
+    `;
+
+    document.body.appendChild(el);
+
+    // Animate
+    let start = null;
+    let lastY = 0;
+    function animate(ts) {
+      if (!start) start = ts;
+      const progress = (ts - start) / speed;
+      if (progress >= 1) { el.remove(); return; }
+
+      const x = startX + (endX - startX) * progress;
+      const wobble = bounce ? Math.sin(progress * Math.PI * 6) * 18 : 0;
+      el.style.transform = `translateX(${x}px) translateY(${wobble}px) ${fromLeft ? 'scaleX(1)' : 'scaleX(-1)'}`;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // Schedule next
+    scheduleNext();
+  }
+
+  function scheduleNext() {
+    const delay = 12000 + Math.random() * 20000; // every 12-32 seconds
+    setTimeout(launchAnimal, delay);
+  }
+
+  // Start first one after 5 seconds
+  setTimeout(launchAnimal, 5000);
 
   window.showToast = function(msg) {
     const t = document.getElementById('toast');
